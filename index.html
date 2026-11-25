@@ -3,149 +3,202 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#FFE6C2">
+<meta name="theme-color" content="#C5D23A">
 <title>콕콕 노노그램</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@800;900&display=swap">
 <style>
+/* 색은 레퍼런스(캐주얼 게임 맵) 화면에서 뽑았어요: 풀밭 #C5D23A/#B4CA3B, 길 #FEDF84, 나무 #52A231, 버튼 틀 #CD8727 */
 :root{
-  --bg:#FFE6C2; --panel:#FFF6E3; --panel-d:#F0CF9F; --or:#F7A540; --or-d:#E3872A; --or-l:#FFD08A;
-  --tx:#8A4B14; --sub:#C08A52; --cellbg:#FFF6E3; --gl:#FFE3BA; --gb:#F5BE74; --x:#E6C594;
-  --coral:#FF7E6B; --yel:#FFC83D; --yel-d:#EBA91E; --teal:#3CC4B4; --teal-d:#2BA898;
-  --title:"Jua","Gowun Dodum",-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --grass:#C5D23A; --grass2:#B4CA3B; --leaf:#52A231;
+  --path:#FEDF84; --path-e:#F2C664;
+  --wood:#CD8727; --cream:#FFF5EA; --cream2:#FBE3C2;
+  /* 스트로크는 한 색으로 통일하지 않고, 요소마다 자기 면 색을 한 단계 짙게 한 색을 써요 */
+  --or-s:#C2600E; --green-s:#3B8A1A; --cream-s:#D9AE7A; --white-s:#D8C2A2; --wood-s:#8A4E10; --frame-s:#A8692A;
+  --pink-s:#C42A5C; --red-s:#B83220; --grass-s:#6C8A12; --sky-s:#5AAFC2; --clue-s:#E2BC85;
+  --tx:#5A3214; --sub:#9A6A3C; --or:#FF9E3B; --or-d:#E2741F; --green:#6CC63A; --green-d:#4A9E23;
+  --pink:#FF5184; --red:#FF5943; --sky:#47D1DE; --yel:#FFD23A;
+  --cellbg:#FFFDF6; --gl:#F1E0C2; --gb:#D6A866; --x:#D9BE95; --clue:#FFEBC9; --clue-hl:#FFD27A; --coral:#FF5A5F;
+  --kr:"Jua",-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --num:"Nunito","Jua",-apple-system,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%}
-body{color:var(--tx);font-family:"Gowun Dodum",-apple-system,"Apple SD Gothic Neo",sans-serif;font-weight:700;
-  background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%23FFD9A6' stroke-width='8'%3E%3Ccircle cx='28' cy='32' r='13'/%3E%3Ccircle cx='104' cy='98' r='9'/%3E%3C/g%3E%3Cg fill='%23FFD9A6'%3E%3Ccircle cx='108' cy='22' r='6'/%3E%3Ccircle cx='40' cy='104' r='9'/%3E%3Ccircle cx='27' cy='90' r='4'/%3E%3Ccircle cx='38' cy='86' r='4'/%3E%3Ccircle cx='49' cy='89' r='4'/%3E%3Ccircle cx='70' cy='60' r='3'/%3E%3C/g%3E%3C/svg%3E");
+html,body{margin:0;min-height:100%}
+body{color:var(--tx);font-family:var(--kr);background:var(--grass) repeating-linear-gradient(135deg,transparent 0 64px,rgba(150,178,40,.24) 64px 128px);
   -webkit-font-smoothing:antialiased;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+img{-webkit-user-drag:none}
 [hidden]{display:none!important}
 svg{display:block}
-.screen{max-width:480px;margin:0 auto;min-height:100%;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
+.ol{color:#fff;-webkit-text-stroke:5px var(--grass-s);paint-order:stroke fill}
 
-/* 공통 부품: 아래쪽에 한 톤 진한 두께가 있는 말랑한 버튼 */
-.pb{font-family:var(--title);font-size:18px;height:50px;padding:0 26px;border-radius:99px;background:var(--or);color:#fff;
-  box-shadow:0 5px 0 var(--or-d),0 10px 14px rgba(227,135,42,.22);text-shadow:0 1.5px 0 rgba(170,95,20,.35);transition:transform .07s,box-shadow .07s}
-.pb:active{transform:translateY(4px);box-shadow:0 1px 0 var(--or-d)}
-.pb.yel{background:var(--yel);color:#8A4B14;text-shadow:none;box-shadow:0 5px 0 var(--yel-d),0 10px 14px rgba(40,120,130,.2)}
-.pb.yel:active{box-shadow:0 1px 0 var(--yel-d)}
-.pb.wh{background:#fff;color:var(--tx);text-shadow:none;box-shadow:0 5px 0 var(--panel-d)}
-.pb.wh:active{box-shadow:0 1px 0 var(--panel-d)}
-.rb{width:44px;height:44px;border-radius:50%;background:var(--panel);border:4px solid #fff;box-shadow:0 4px 0 #E9C48F;display:grid;place-items:center;font-family:var(--title);font-size:19px;color:var(--or-d);transition:transform .07s,box-shadow .07s}
-.rb:active{transform:translateY(3px);box-shadow:0 1px 0 #E9C48F}
-.tile{background:var(--panel);border-radius:22px;box-shadow:0 5px 0 var(--panel-d);transition:transform .07s,box-shadow .07s}
-button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
-.pill{display:inline-flex;align-items:center;gap:5px;height:30px;padding:1px 12px 0 8px;border-radius:99px;background:var(--panel);box-shadow:0 3px 0 #E9C48F;font-family:var(--title);font-size:15px}
-.pill svg{width:18px;height:18px}
-
-/* ---------- 홈 ---------- */
-.top{display:flex;align-items:center;gap:8px;padding:16px 0 14px}
-.logo{flex:1;font-family:var(--title);font-size:25px;color:#fff;-webkit-text-stroke:7px var(--or);paint-order:stroke fill;text-shadow:0 3px 0 var(--or-d);letter-spacing:.01em;padding-left:4px;white-space:nowrap}
-.daily{position:relative;border-radius:28px;border:4px solid #fff;padding:16px 16px 14px;color:#fff;
-  background:linear-gradient(160deg,#6CC6F0 0%,#5FD3CF 60%,#7FE0BC 100%);box-shadow:0 6px 0 #BFDCCB,0 14px 20px rgba(80,160,170,.2);overflow:hidden}
-.daily::before{content:"";position:absolute;right:-30px;bottom:-50px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.16)}
-.tag{position:relative;display:inline-block;font-family:var(--title);font-size:13px;background:rgba(255,255,255,.3);border-radius:99px;padding:4px 12px 3px}
-.daily h2{position:relative;margin:8px 0 2px;font-family:var(--title);font-weight:400;font-size:27px;text-shadow:0 2px 0 rgba(30,120,140,.3)}
-.daily p{position:relative;margin:0;font-size:14.5px;text-shadow:0 1px 0 rgba(30,120,140,.25)}
-.daily .pb{position:relative;margin-top:14px;height:46px}
-.daily .masc{position:absolute;right:14px;top:10px;width:104px;animation:bob 2.6s ease-in-out infinite;transform-origin:50% 100%}
-@keyframes bob{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg) translateY(-3px)}}
-.week{position:relative;display:flex;gap:6px;margin-top:18px}
-.week button{flex:1;height:52px;border-radius:16px;background:rgba(255,255,255,.26);color:#fff;font-family:var(--title);font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.week button b{font-weight:400;font-size:17px;line-height:1.1}
-.week button svg{width:19px;height:19px}
-.week button.done{background:var(--yel);color:#8A4B14}
-.week button.today{background:#fff;color:var(--teal-d)}
-.week button.today.done{background:var(--yel);color:#8A4B14;box-shadow:0 0 0 3px #fff}
-.week button:active{transform:scale(.94)}
-.sec{margin-top:28px}
-.sec-h{display:flex;align-items:center;justify-content:space-between;margin:0 4px 12px}
-.sec-h h3{margin:0;font-family:var(--title);font-weight:400;font-size:22px;display:flex;align-items:center;gap:7px}
-.sec-h h3 svg{width:22px;height:22px}
-.sec-h span{font-size:13px;color:var(--sub)}
-.rand{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.rand button{padding:12px 6px 10px;display:flex;flex-direction:column;align-items:center}
-.rand .y{height:50px;display:flex;align-items:flex-end}
-.rand b{font-family:var(--title);font-weight:400;font-size:19px;margin-top:6px}
-.rand small{font-size:12px;color:var(--sub)}
-.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 8px}
-.card{height:106px;min-width:0;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px 4px}
-.card .yarn{width:60px;height:60px}
-.card.ing .yarn{animation:wig 1.8s ease-in-out infinite}
-@keyframes wig{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-9deg)}85%{transform:rotate(9deg)}}
-.card .pic{width:54px;height:54px;border-radius:12px;background:#FFEBC8;padding:6px}
-.card .pic svg{width:100%;height:100%}
-.card .cap{font-family:var(--title);font-size:13px;white-space:nowrap;line-height:1.2}
-.card.ing .cap{color:var(--coral)}
-.stars{font-size:11px;letter-spacing:1px;color:var(--yel);line-height:1}
-.stars i{font-style:normal;color:#F1DDBB}
-.foot{margin:34px 0 0;text-align:center;font-size:12.5px;color:var(--sub)}
+/* ---------- 공통 부품: 짙은 갈색 외곽선 + 아래 두께 ---------- */
+.pb{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:54px;padding:0 28px;border-radius:18px;background:var(--or);--s:var(--or-s);border:3px solid var(--s);
+  box-shadow:inset 0 -5px 0 var(--or-d);font-size:21px;color:#fff;-webkit-text-stroke:5px var(--s);paint-order:stroke fill;transition:transform .08s,box-shadow .08s}
+.pb:active{transform:translateY(3px);box-shadow:inset 0 -3px 0 var(--or-d)}
+.pb.green{--s:var(--green-s);background:var(--green);box-shadow:inset 0 -5px 0 var(--green-d)}
+.pb.cr{--s:var(--cream-s);background:var(--cream);color:var(--tx);-webkit-text-stroke:0;box-shadow:inset 0 -5px 0 var(--cream2)}
+.pb.sm{height:44px;padding:0 20px;font-size:18px;border-radius:15px}
+.sq{flex:none;width:48px;height:48px;border-radius:15px;background:var(--wood);border:3px solid var(--wood-s);box-shadow:inset 0 -5px 0 rgba(120,60,10,.3);display:grid;place-items:center}
+.bo{stroke:var(--wood-s)}
+.sq:active{transform:translateY(2px)}
+.pill{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 13px;border-radius:99px;background:var(--cream);border:3px solid var(--cream-s);font-family:var(--num);font-weight:900;font-size:15px;color:var(--tx)}
+.pill img{width:22px;height:22px;object-fit:contain}
+.btn-txt{height:38px;font-size:16px;color:var(--sub)}
+.stars{display:flex;justify-content:center}
+.stars img{width:16px;height:16px;object-fit:contain}
+.stars img.off{filter:grayscale(1) brightness(1.3);opacity:.45}
+.catimg{display:block;width:100%;height:auto;pointer-events:none}
+.glow{position:absolute;width:124px;height:54px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(255,255,210,0) 58%,rgba(255,255,190,.95) 78%,rgba(255,255,220,0) 100%);animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{transform:translate(-50%,-50%) scale(1.12);opacity:.65}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.say{position:relative;align-self:center;max-width:320px;background:#fff;border:3px solid var(--white-s);border-radius:20px;padding:12px 20px;font-size:19px;line-height:1.4;text-align:center;}
+.say::after{content:"";position:absolute;left:50%;bottom:-10px;width:15px;height:15px;margin-left:-8px;background:#fff;border:solid var(--white-s);border-width:0 3px 3px 0;transform:rotate(45deg)}
 
 /* ---------- 난이도 고르기 ---------- */
-#onb{display:flex;flex-direction:column;justify-content:center;min-height:100%;padding-top:24px}
-.onb-cat{width:150px;margin:14px auto 22px;animation:bob 2.6s ease-in-out infinite;transform-origin:50% 100%}
-.say{position:relative;align-self:center;max-width:300px;background:var(--panel);border-radius:22px;padding:14px 20px 12px;font-family:var(--title);font-size:20px;line-height:1.35;text-align:center;color:var(--or-d);box-shadow:0 5px 0 #E9C48F}
-.say::after{content:"";position:absolute;left:50%;bottom:-8px;width:18px;height:18px;margin-left:-9px;background:var(--panel);transform:rotate(45deg);border-radius:4px;box-shadow:4px 4px 0 #E9C48F}
-.choices{display:flex;flex-direction:column;gap:13px}
-.choice{display:flex;align-items:center;gap:14px;width:100%;padding:12px 16px;text-align:left;border-radius:24px}
-.choice .yarn{flex:none;width:46px;height:46px}
-.choice b{display:block;font-family:var(--title);font-weight:400;font-size:19px}
-.choice small{font-size:13px;color:var(--sub)}
-.choice.cur{box-shadow:0 5px 0 var(--or-d);outline:3px solid var(--or);outline-offset:-3px}
-.sheet .choice{background:#FFEBC8;box-shadow:0 5px 0 #EBCB98}
-.sheet .choice.cur{box-shadow:0 5px 0 var(--or-d)}
-.onb-go{display:flex;flex-direction:column;gap:12px;align-items:stretch}
-.onb-go .pb{height:56px;font-size:20px}
-.path{margin-top:16px;padding:14px 14px 16px}
-.path-h{display:flex;align-items:center;justify-content:space-between}
-.lvchip{display:inline-flex;align-items:center;gap:6px;font-family:var(--title);font-size:17px}
-.lvchip .yarn{width:26px;height:26px}
-.chg{font-family:var(--title);font-size:13px;color:var(--sub);background:#FFEBC8;border-radius:99px;padding:6px 12px 5px}
-.chg:active{transform:scale(.95)}
-.bar{height:12px;border-radius:99px;background:#FFE3B8;margin:12px 0 14px;overflow:hidden}
-.bar i{display:block;height:100%;border-radius:99px;min-width:12px}
-.path-b{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.path-b b{display:block;font-family:var(--title);font-weight:400;font-size:18px}
-.path-b small{font-size:13px;color:var(--sub)}
-.path-b .pb{flex:none;height:46px;padding:0 22px;font-size:17px}
+#onb{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:28px 18px calc(28px + env(safe-area-inset-bottom))}
+.stand{position:relative;width:180px;height:196px;margin:18px auto 20px}
+.stand .stump{position:absolute;left:50%;bottom:0;width:112px;transform:translateX(-50%)}
+.stand .glow{left:50%;bottom:-2px;top:auto;transform:translate(-50%,0);width:170px;height:66px;animation:none}
+.stand .c{position:absolute;left:50%;bottom:58px;width:124px;margin-left:-62px;animation:bob 2.4s ease-in-out infinite}
+.choices{display:flex;flex-direction:column;gap:12px}
+.choice{display:flex;align-items:center;gap:12px;width:100%;padding:8px 14px 8px 8px;text-align:left;background:var(--cream);border:3px solid var(--cream-s);border-radius:20px;box-shadow:inset 0 -5px 0 var(--cream2)}
+.choice:active{transform:translateY(3px);box-shadow:inset 0 -3px 0 var(--cream2)}
+.choice img{flex:none;width:62px;height:62px;object-fit:contain}
+.choice span{flex:1;min-width:0}
+.choice b{display:block;font-weight:400;font-size:20px}
+.choice small{font-size:14px;color:var(--sub)}
+.choice em{flex:none;font-style:normal;font-size:13px;line-height:1.25;text-align:center;color:#fff;background:var(--wood);border:2.5px solid var(--wood-s);border-radius:12px;padding:5px 8px 4px}
+.onb-go{display:flex;flex-direction:column;gap:12px}
+
+/* ---------- 지도 ---------- */
+.world{position:relative;z-index:0;max-width:480px;margin:0 auto;overflow:hidden}
+.world>svg{position:absolute;left:0;top:0}
+.dc{position:absolute;transform:translate(-50%,-100%);pointer-events:none}
+.dc img{display:block;width:100%}
+.dc.flip img{transform:scaleX(-1)}
+.sh{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:rgba(95,125,15,.3);pointer-events:none}
+.node{position:absolute;width:76px;height:64px;transform:translate(-50%,-50%)}
+.node>img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain}
+.node b{position:absolute;left:0;right:0;top:15%;text-align:center;font-family:var(--num);font-weight:900;font-size:22px;line-height:1;color:#fff;-webkit-text-stroke:6px #626262;paint-order:stroke fill}
+.node.done b,.node.open b{top:12%;-webkit-text-stroke-color:#8C5524}
+.node .ns{position:absolute;left:50%;top:86%;transform:translateX(-50%);display:flex}
+.node .ns img{width:19px;height:19px}
+.node.lock{filter:saturate(.9)}
+.node.open>*{animation:bob 1.6s ease-in-out infinite}
+.node.just .ns img{animation:starpop .6s cubic-bezier(.3,1.6,.5,1) both}
+.node.just .ns img:nth-child(2){animation-delay:.12s}.node.just .ns img:nth-child(3){animation-delay:.24s}
+@keyframes starpop{from{transform:scale(0) rotate(-40deg)}}
+.hero{position:absolute;width:80px;transform:translate(-50%,-100%);transition:left .8s ease-in-out,top .8s ease-in-out;cursor:pointer}
+.hero img{display:block;width:100%;animation:bob 2.2s ease-in-out infinite}
+.hero.drop{animation:drop .7s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes drop{from{transform:translate(-50%,-190%);opacity:0}}
+.pin{position:absolute;left:50%;bottom:100%;margin-bottom:6px;transform:translateX(-50%);background:var(--pink);border:3px solid var(--pink-s);border-radius:14px;padding:5px 11px 4px;white-space:nowrap;
+  font-size:16px;color:#fff;-webkit-text-stroke:4px var(--pink-s);paint-order:stroke fill;animation:pinb 1.3s ease-in-out infinite}
+.pin::after{content:"";position:absolute;left:50%;top:100%;width:12px;height:12px;margin:-7px 0 0 -6px;background:var(--pink);border:solid var(--pink-s);border-width:0 3px 3px 0;transform:rotate(45deg)}
+@keyframes pinb{50%{transform:translateX(-50%) translateY(-5px)}}
+/* 말풍선은 다음 단계를 가리지 않게 콕이 머리 옆, 다음 단계 반대편에 띄워요 */
+.pin.r,.pin.l{bottom:auto;top:2px;margin:0;transform:none;animation:pins 1.3s ease-in-out infinite}
+.pin.r{left:calc(100% - 12px)}.pin.l{right:calc(100% - 12px);left:auto}
+.pin.r::after{left:0;top:50%;margin:-6px 0 0 -8px;border-width:0 0 3px 3px}
+.pin.l::after{left:auto;right:0;top:50%;margin:-6px -8px 0 0;border-width:3px 3px 0 0}
+@keyframes pins{50%{transform:translateY(-4px)}}
+.sign{position:absolute;width:132px;transform:translate(-50%,-100%)}
+.sign img{display:block;width:100%}
+.sign span{position:absolute;left:10%;right:10%;top:9%;height:62%;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;color:var(--tx)}
+.sign small{font-size:12.5px;color:var(--sub)}
+.sign b{font-weight:400;font-size:19px}
+.pop{position:absolute;width:224px;transform:translate(-50%,-100%);margin-top:-30px;background:var(--cream);border:3px solid var(--cream-s);border-radius:20px;padding:12px 14px 14px;text-align:center;animation:popin .18s ease-out}
+.pop::after{content:"";position:absolute;left:var(--ax,50%);top:100%;width:16px;height:16px;margin:-6px 0 0 -8px;background:var(--cream);border:solid var(--cream-s);border-width:0 3px 3px 0;transform:rotate(45deg)}
+@keyframes popin{from{opacity:0;margin-top:-18px}}
+.pop b{display:block;font-weight:400;font-size:20px}
+.pop small{display:block;font-size:14px;color:var(--sub);margin:2px 0 8px}
+.pop .pp{display:block;width:86px;height:86px;margin:0 auto 6px;background:#fff;border:3px solid var(--white-s);border-radius:12px;padding:7px}
+.pop .pp svg{width:100%;height:100%}
+.pop .pp.q{display:grid;place-items:center;background:var(--cream2);border-color:var(--cream-s);font-family:var(--num);font-weight:900;font-size:40px;color:#E0BF8E;padding:0}
+.pop .stars{margin:-4px 0 8px}
+.pop .stars img{width:22px;height:22px}
+.pop .pb{width:100%}
+.pop .pl{display:block;width:64px;margin:0 auto 4px;filter:grayscale(.2)}
+
+.hud{position:fixed;z-index:50;top:calc(env(safe-area-inset-top) + 10px);left:max(10px,calc(50vw - 230px));right:max(84px,calc(50vw - 160px))}
+.secbtn{display:flex;align-items:center;gap:8px;max-width:100%;padding:5px 12px 6px 6px;text-align:left;background:var(--cream);border:3px solid var(--cream-s);border-radius:20px;box-shadow:inset 0 -5px 0 var(--cream2)}
+.secbtn:active{transform:translateY(3px)}
+.secbtn img{flex:none;width:48px;height:48px;object-fit:contain}
+.secbtn .t{min-width:0;flex:1}
+.secbtn b{display:block;font-weight:400;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.secbtn small{display:block;font-size:13px;color:var(--sub);white-space:nowrap}
+.secbtn .chev{flex:none;width:28px;height:28px;border-radius:50%;background:var(--wood);border:2.5px solid var(--wood-s);display:grid;place-items:center}
+.bar{display:block;height:11px;border-radius:99px;background:var(--cream2);border:2px solid var(--cream-s);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;min-width:6px;background:var(--or);border-right:2px solid var(--or-s)}
+.rail{position:fixed;z-index:50;top:calc(env(safe-area-inset-top) + 92px);right:max(0px,calc(50vw - 240px));display:flex;flex-direction:column;gap:10px}
+.rail button{position:relative;width:70px;height:68px;padding:2px 0 0 4px;background:var(--wood);border:3px solid var(--wood-s);border-right:0;border-radius:20px 0 0 20px;
+  box-shadow:inset 0 -5px 0 rgba(120,60,10,.3);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rail button:active{transform:translateX(3px)}
+.rail img{width:42px;height:42px;object-fit:contain}
+.rail span{font-size:13px;line-height:1;color:#fff;-webkit-text-stroke:4px var(--wood-s);paint-order:stroke fill;margin-top:-2px}
+.rail .q{font-family:var(--num);font-weight:900;font-size:30px;line-height:42px;color:#fff;-webkit-text-stroke:6px var(--wood-s);paint-order:stroke fill}
+.rail em{position:absolute;top:-8px;left:-10px;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:var(--pink);border:2.5px solid var(--pink-s);color:#fff;font-style:normal;font-family:var(--num);font-weight:900;font-size:13px;display:grid;place-items:center}
+.rail .dot{position:absolute;top:5px;left:6px;width:13px;height:13px;border-radius:50%;background:var(--red);border:2.5px solid var(--red-s)}
+.me{position:fixed;z-index:50;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);display:flex;align-items:center;gap:4px;height:46px;padding:0 16px 0 6px;
+  background:var(--cream);border:3px solid var(--cream-s);border-radius:99px;font-size:16px}
+.me img{width:38px;height:38px;object-fit:cover;object-position:50% 10%;border-radius:50%}
+
+/* ---------- 모은 그림 ---------- */
+#gal{max-width:480px;margin:0 auto;min-height:100vh;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
+.ghead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 0 10px;background:linear-gradient(var(--grass) 82%,rgba(197,210,58,0))}
+.ghead h1{flex:1;margin:0;font-weight:400;font-size:27px}
+.gsub{margin:2px 2px 12px;font-size:15px;color:#fff;-webkit-text-stroke:4px var(--grass-s);paint-order:stroke fill;line-height:1.4}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{flex:1;height:48px;border-radius:15px;background:var(--cream);border:3px solid var(--cream-s);box-shadow:inset 0 -4px 0 var(--cream2);font-size:17px;display:flex;align-items:center;justify-content:center;gap:5px}
+.tabs small{font-family:var(--num);font-weight:900;font-size:12.5px;color:var(--sub)}
+.tabs button.on{background:var(--or);border-color:var(--or-s);box-shadow:inset 0 -4px 0 var(--or-d);color:#fff;-webkit-text-stroke:4px var(--or-s);paint-order:stroke fill}
+.tabs button.on small{color:#fff;-webkit-text-stroke:3px var(--or-s)}
+.frames{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 12px}
+.fr{display:flex;flex-direction:column;align-items:center;min-width:0}
+.fr .cv{display:block;width:100%;aspect-ratio:1;background:#fff;border:7px solid #E0A55A;border-radius:10px;box-shadow:0 0 0 3px var(--frame-s);padding:9%}
+.fr .cv svg{width:100%;height:100%}
+.fr.q .cv{display:grid;place-items:center;padding:0;background:var(--cream2);font-family:var(--num);font-weight:900;font-size:36px;color:#E3C495}
+.fr.q.lockd .cv{border-color:#BDAE96;box-shadow:0 0 0 3px #8F806A;background:#EDE2CF;color:#CDBEA5}
+.fr.q.open .cv{border-color:var(--or);box-shadow:0 0 0 3px var(--or-s);color:var(--or)}
+.fr .cap{max-width:100%;margin-top:12px;padding:3px 10px 2px;background:var(--cream);border:2.5px solid var(--cream-s);border-radius:99px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr .stars{height:20px;margin-top:3px}
+.fr .go{margin-top:3px;font-size:13px;color:#fff;-webkit-text-stroke:3.5px var(--grass-s);paint-order:stroke fill}
+.fr:active .cv{transform:translateY(2px)}
 
 /* ---------- 게임 ---------- */
-#game{display:flex;flex-direction:column;height:100%;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
-.gbar{display:flex;align-items:center;gap:8px;padding:14px 0 4px}
-.gbar .title{flex:1;text-align:center;isolation:isolate}
-.ribbon{position:relative;display:inline-block;background:var(--or);color:#fff;font-family:var(--title);font-size:19px;padding:8px 22px 6px;border-radius:8px;box-shadow:0 4px 0 var(--or-d);text-shadow:0 1.5px 0 rgba(170,95,20,.35);white-space:nowrap}
-.ribbon::before,.ribbon::after{content:"";position:absolute;top:7px;width:24px;height:100%;background:#EE9634;z-index:-1}
-.ribbon::before{left:-15px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,38% 50%)}
-.ribbon::after{right:-15px;clip-path:polygon(0 0,100% 0,62% 50%,100% 100%,0 100%)}
-.gbar .time{min-width:60px;justify-content:center;padding:1px 10px 0;font-variant-numeric:tabular-nums}
-.status{display:flex;align-items:center;gap:10px;padding:12px 0 8px}
-.status .masc{flex:none;width:58px;height:58px;border-radius:50%;border:4px solid #fff;background:linear-gradient(160deg,#8DD6F5,#8FE3D0);box-shadow:0 4px 0 #E9C48F;overflow:hidden}
-.status .masc svg{width:100%;height:100%}
+#game{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 10px) 14px calc(14px + env(safe-area-inset-bottom))}
+.gbar{display:flex;align-items:center;gap:8px}
+.gbar .title{flex:1;min-width:0;text-align:center}
+.plaque{display:inline-block;max-width:100%;background:var(--wood);border:3px solid var(--wood-s);border-radius:14px;box-shadow:inset 0 -4px 0 rgba(120,60,10,.3);
+  padding:7px 18px 6px;font-size:20px;color:#fff;-webkit-text-stroke:5px var(--wood-s);paint-order:stroke fill;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gbar .time{min-width:66px;justify-content:center;font-variant-numeric:tabular-nums}
+.status{display:flex;align-items:center;gap:10px;padding:12px 0 6px}
+.status .masc{position:relative;flex:none;width:60px;height:60px;border-radius:50%;border:3px solid var(--sky-s);background:#BDEBF3;overflow:hidden}
+.status .masc img{position:absolute;width:150%;max-width:none;left:-25%;top:6%}
 .status .masc.jump{animation:jump .45s}
 @keyframes jump{30%{transform:translateY(-8px) rotate(-6deg)}60%{transform:translateY(0) rotate(4deg)}}
-.bubble{flex:1;min-width:0;position:relative;background:var(--panel);border-radius:18px;padding:10px 14px 9px;font-size:14.5px;line-height:1.3;box-shadow:0 4px 0 #E9C48F;color:var(--or-d)}
-.bubble::before{content:"";position:absolute;left:-6px;top:50%;width:14px;height:14px;margin-top:-7px;background:var(--panel);transform:rotate(45deg);border-radius:3px}
-.hearts{display:flex;gap:1px;flex:none}
-.hearts svg{width:28px;height:28px;transition:transform .25s,opacity .25s}
-.hearts svg.off{transform:scale(.8)}
-.hearts svg.off path{fill:#F1D4AE}
-.hearts svg.off .hi{display:none}
+.bubble{flex:1;min-width:0;position:relative;background:#fff;border:3px solid var(--white-s);border-radius:16px;padding:8px 12px 7px;font-size:15px;line-height:1.3}
+.bubble::before{content:"";position:absolute;left:-8px;top:50%;width:12px;height:12px;margin-top:-6px;background:#fff;border:solid var(--white-s);border-width:0 0 3px 3px;transform:rotate(45deg)}
+.hearts{display:flex;flex:none}
+.hearts img{width:31px;height:31px;object-fit:contain;transition:transform .25s,filter .25s,opacity .25s}
+.hearts img.off{transform:scale(.8);filter:grayscale(1) brightness(1.2);opacity:.45}
 .stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
-.wrap{background:#FFEFD4;border-radius:22px;padding:8px;box-shadow:0 6px 0 var(--panel-d)}
-.board{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;font-family:var(--title);font-variant-numeric:tabular-nums}
-.colclues{grid-column:2;display:flex;border-radius:12px 12px 0 0;overflow:hidden;margin-right:3px}
-.cc{width:var(--cell);background:var(--or);box-shadow:inset -1px 0 0 rgba(255,255,255,.38);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:6px 0 4px;gap:1px;transition:background .15s}
-.rowclues{grid-row:2;display:flex;flex-direction:column;border-radius:12px 0 0 12px;overflow:hidden;margin-bottom:3px}
-.rc{height:var(--cell);background:var(--or);box-shadow:inset 0 -1px 0 rgba(255,255,255,.38);display:flex;justify-content:flex-end;align-items:center;padding:0 6px 0 8px;gap:calc(var(--fs)*.42);transition:background .15s}
-.cc.s5{box-shadow:inset -2px 0 0 rgba(255,255,255,.8)}
-.rc.s5{box-shadow:inset 0 -2px 0 rgba(255,255,255,.8)}
-.cc span,.rc span{font-size:var(--fs);line-height:1.12;color:#fff;text-shadow:0 1px 0 rgba(170,95,20,.3);transition:opacity .2s}
-.cc span.d,.rc span.d{opacity:.42;text-shadow:none}
-.cc.hl,.rc.hl{background:var(--or-d)}
+.wrap{background:var(--cream);border:7px solid var(--wood);border-radius:20px;padding:5px;box-shadow:0 0 0 3px var(--wood-s)}
+.board{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;font-family:var(--num);font-weight:900;font-variant-numeric:tabular-nums}
+.colclues{grid-column:2;display:flex;border-radius:10px 10px 0 0;overflow:hidden;margin-right:2px}
+.cc{width:var(--cell);background:var(--clue);box-shadow:inset -1px 0 0 rgba(140,85,36,.16);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:6px 0 4px;gap:1px;transition:background .15s}
+.rowclues{grid-row:2;display:flex;flex-direction:column;border-radius:10px 0 0 10px;overflow:hidden;margin-bottom:2px}
+.rc{height:var(--cell);background:var(--clue);box-shadow:inset 0 -1px 0 rgba(140,85,36,.16);display:flex;justify-content:flex-end;align-items:center;padding:0 6px 0 8px;gap:calc(var(--fs)*.42);transition:background .15s}
+.cc.s5{box-shadow:inset -2px 0 0 rgba(140,85,36,.4)}
+.rc.s5{box-shadow:inset 0 -2px 0 rgba(140,85,36,.4)}
+.cc span,.rc span{font-size:var(--fs);line-height:1.12;color:var(--tx);transition:opacity .2s}
+.cc span.d,.rc span.d{opacity:.28}
+.cc.hl,.rc.hl{background:var(--clue-hl)}
 .grid{grid-row:2;grid-column:2;display:grid;grid-template-columns:repeat(var(--n),var(--cell));grid-auto-rows:var(--cell);
-  border-right:3px solid var(--or);border-bottom:3px solid var(--or);border-radius:0 0 12px 0;overflow:hidden;background:var(--cellbg);touch-action:none;cursor:pointer}
+  border-right:2px solid var(--gb);border-bottom:2px solid var(--gb);border-radius:0 0 10px 0;overflow:hidden;background:var(--cellbg);touch-action:none;cursor:pointer}
 .cell{border-right:1px solid var(--gl);border-bottom:1px solid var(--gl);position:relative;transition:border-color .5s}
 .cell.br{border-right:2px solid var(--gb)}
 .cell.bb{border-bottom:2px solid var(--gb)}
@@ -165,67 +218,93 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
 .board.won .cell{border-color:transparent}
 .board.won .cell.f::before{inset:0 -2px -2px 0}
 .board.won .cell.x::after{opacity:0}
-.controls{display:flex;align-items:flex-start;justify-content:center;gap:18px;padding-top:16px}
-.cbtn{display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--title);font-size:13px;color:var(--sub);position:relative}
-.cbtn .o{width:64px;height:64px;border-radius:50%;background:var(--panel);border:5px solid #fff;box-shadow:0 5px 0 #E9C48F,0 10px 14px rgba(227,135,42,.18);display:grid;place-items:center;color:var(--or-l);transition:transform .07s,box-shadow .07s,background .12s}
-.cbtn .ic{width:24px;height:24px;border-radius:7px;background:currentColor}
-.cbtn .ic.xx{border-radius:0;width:26px;height:26px;background:linear-gradient(45deg,transparent 39%,currentColor 39%,currentColor 61%,transparent 61%),linear-gradient(-45deg,transparent 39%,currentColor 39%,currentColor 61%,transparent 61%)}
-.cbtn.on{color:var(--or-d)}
-.cbtn.on .o{background:var(--or);color:#fff;transform:translateY(3px);box-shadow:0 2px 0 var(--or-d)}
-.cbtn:active .o{transform:translateY(4px);box-shadow:0 1px 0 #E9C48F}
+.controls{display:flex;align-items:flex-start;justify-content:center;gap:12px;padding-top:16px}
+.cbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14px;color:#fff;-webkit-text-stroke:4px var(--grass-s);paint-order:stroke fill}
+.cbtn .o{--s:var(--cream-s);width:72px;height:62px;border-radius:18px;background:var(--cream);border:3px solid var(--s);box-shadow:inset 0 -5px 0 var(--cream2);display:grid;place-items:center;color:#E3C79F;-webkit-text-stroke:0;transition:transform .08s}
+.cbtn.on .o{--s:var(--or-s);background:var(--or);box-shadow:inset 0 -5px 0 var(--or-d);color:#fff}
+.cbtn:active .o{transform:translateY(3px)}
+.cbtn .ic{width:24px;height:24px;border-radius:6px;background:currentColor;box-shadow:0 0 0 3px var(--s)}
+.cbtn .xo{stroke:var(--s)}
 .cbtn .o svg{width:30px;height:30px}
-.cbtn em{position:absolute;top:-6px;right:-6px;min-width:26px;height:26px;border-radius:13px;background:var(--coral);border:3px solid #fff;color:#fff;font-style:normal;font-size:14px;display:grid;place-items:center;padding:1px 5px 0}
-.cbtn:disabled{opacity:.45}
-.sep{width:2px;height:40px;margin-top:12px;border-radius:2px;background:#F5D3A2}
+.cbtn .o img{width:44px;height:44px;object-fit:contain}
+.cbtn em{position:absolute;top:-8px;right:-8px;min-width:26px;height:26px;border-radius:13px;background:var(--pink);border:2.5px solid var(--pink-s);color:#fff;font-style:normal;font-family:var(--num);font-weight:900;font-size:13px;-webkit-text-stroke:0;display:grid;place-items:center;padding:0 5px}
+.cbtn:disabled{opacity:.5}
+.sep{width:3px;height:40px;margin-top:12px;border-radius:2px;background:rgba(74,42,20,.25)}
 
-/* ---------- 모달 ---------- */
-.overlay{position:fixed;inset:0;background:rgba(120,65,20,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10;animation:fade .2s}
-.sheet{position:relative;background:var(--panel);width:100%;max-width:440px;border-radius:34px 34px 0 0;padding:18px 20px calc(24px + env(safe-area-inset-bottom));text-align:center;animation:up .34s cubic-bezier(.3,1.4,.5,1)}
-@media (min-width:520px){.overlay{align-items:center}.sheet{border-radius:34px;box-shadow:0 7px 0 var(--panel-d)}}
+/* ---------- 시트 ---------- */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(40,28,10,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+.sheet{position:relative;width:100%;max-width:440px;background:var(--cream);border:3px solid var(--cream-s);border-bottom:0;border-radius:28px 28px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));text-align:center;animation:up .32s cubic-bezier(.3,1.4,.5,1)}
+@media (min-width:520px){.overlay{align-items:center}.sheet{border-radius:28px;border-bottom:3px solid var(--cream-s);}}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(60px);opacity:0}}
-.sheet .masc{width:104px;margin:-76px auto 0}
+.sheet .masc{width:104px;margin:-86px auto 0}
 .sheet .masc.happy{animation:hop .7s ease-in-out infinite}
 @keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-12px) rotate(-5deg)}}
-.sheet h2{margin:4px 0 4px;font-family:var(--title);font-weight:400;font-size:27px;color:var(--or-d)}
-.sheet p{margin:0;color:var(--sub);font-size:15px;line-height:1.5}
-.sheet .frame{display:inline-block;margin:12px auto 2px;background:#fff;border-radius:18px;padding:12px 12px 8px;box-shadow:0 5px 0 var(--panel-d);transform:rotate(-3deg)}
-.sheet .frame .pic{background:#FFEBC8;border-radius:10px;padding:8px}
-.sheet .frame svg{width:104px;height:104px}
-.sheet .frame span{display:block;font-family:var(--title);font-size:17px;margin-top:6px}
-.sheet .bigstars{font-size:36px;letter-spacing:6px;margin:12px 0 0;text-shadow:0 3px 0 var(--yel-d)}
-.sheet .bigstars i{text-shadow:0 3px 0 #E2C9A0}
+.sheet .sic{display:block;width:84px;margin:-58px auto 0}
+.sheet h2{margin:6px 0 4px;font-weight:400;font-size:28px;color:var(--or);-webkit-text-stroke:5px var(--or-s);paint-order:stroke fill}
+.sheet p{margin:0;font-size:16px;color:var(--sub);line-height:1.45}
+.sheet .frame{display:inline-block;margin:14px auto 4px;background:#fff;border:7px solid #E0A55A;border-radius:10px;box-shadow:0 0 0 3px var(--frame-s);padding:8px 8px 6px;transform:rotate(-3deg)}
+.sheet .frame svg{width:118px;height:118px}
+.sheet .frame span{display:block;font-size:18px;margin-top:4px}
+.sheet .frame.big svg{width:170px;height:170px}
+.sheet .frame+p{margin-top:12px}
+.sheet .bigstars{display:flex;justify-content:center;gap:4px;margin:14px 0 0}
+.sheet .bigstars img{width:46px;height:46px}
 .sheet .meta{display:flex;justify-content:center;gap:10px;margin:14px 0 0}
-.sheet .meta div{background:#FFEBC8;border-radius:16px;padding:8px 18px 6px;font-size:12.5px;color:var(--sub)}
-.sheet .meta b{display:block;font-family:var(--title);font-weight:400;font-size:20px;color:var(--tx);font-variant-numeric:tabular-nums}
-.btns{display:flex;flex-direction:column;gap:13px;margin-top:22px}
-.btns .pb{height:54px}
-.btn-txt{height:34px;font-family:var(--title);font-size:15px;color:var(--sub)}
+.sheet .meta div{background:#fff;border:3px solid var(--white-s);border-radius:14px;padding:6px 16px 5px;font-size:13px;color:var(--sub)}
+.sheet .meta b{display:block;font-family:var(--num);font-weight:900;font-size:20px;color:var(--tx);font-variant-numeric:tabular-nums}
+.btns{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.secs{display:flex;flex-direction:column;gap:12px;margin-top:16px;text-align:left}
+.sc{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px 9px 8px;background:#fff;border:3px solid var(--white-s);border-radius:18px;}
+.sc.cur{background:#FFF0C4;border-color:#E3BC5C}
+.sc img{flex:none;width:60px;height:60px;object-fit:contain}
+.sc .t{flex:1;min-width:0}
+.sc b{display:block;font-weight:400;font-size:19px}
+.sc small{display:block;font-size:13.5px;color:var(--sub)}
+.sc .here{flex:none;font-size:14px;color:var(--or-d)}
+.sc .sz{flex:none;width:60px;font-family:var(--num);font-weight:900;font-size:19px;text-align:center}
+.sc .pb{flex:none}
+.week{display:flex;gap:5px;margin:16px 0 0}
+.week button{flex:1;height:58px;border-radius:13px;background:#fff;border:2.5px solid var(--white-s);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12.5px;color:var(--sub)}
+.week b{font-family:var(--num);font-weight:900;font-size:16px;color:var(--tx)}
+.week img{width:20px;height:20px}
+.week .done{background:#E2F3B4;border-color:#9DC55A}
+.week .today{background:#FFE7A8;border-color:#E3B24E}
 .how{text-align:left;margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
-.how li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.5;background:#FFEBC8;border-radius:16px;padding:10px 12px}
-.how li b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--or);color:#fff;font-family:var(--title);font-weight:400;display:grid;place-items:center;font-size:15px;padding-top:1px}
-.how strong{color:var(--or-d)}
-.demo{display:inline-flex;margin:14px auto 0;font-family:var(--title);font-size:17px;border-radius:10px;overflow:hidden;box-shadow:0 4px 0 var(--panel-d)}
-.demo span{background:var(--or);color:#fff;padding:6px 10px 4px 12px}
-.demo u{width:30px;border-right:1px solid var(--gl);background:var(--cellbg);text-decoration:none}
-.demo u.f{background:#F0625A}
+.how li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.5;background:#fff;border:2.5px solid var(--white-s);border-radius:14px;padding:9px 12px}
+.how li b{flex:none;width:27px;height:27px;border-radius:50%;background:var(--wood);border:2.5px solid var(--wood-s);color:#fff;font-family:var(--num);font-weight:900;display:grid;place-items:center;font-size:14px}
+.how strong{font-weight:400;color:var(--or-d)}
+.demo{display:inline-flex;margin:14px auto 0;font-family:var(--num);font-weight:900;font-size:17px;border-radius:10px;overflow:hidden;border:3px solid var(--clue-s)}
+.demo span{background:var(--clue);color:var(--tx);padding:6px 10px 4px 12px}
+.demo u{width:30px;border-left:1px solid var(--gl);background:var(--cellbg);text-decoration:none}
+.demo u.f{background:var(--red)}
+.note{margin-top:12px!important;font-size:13px!important}
 .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
-.confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:4px;animation:fall linear forwards}
+.confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:4px;border:2px solid rgba(60,30,0,.22);animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+.toast{position:fixed;z-index:200;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translateX(-50%);background:#fff;border:3px solid var(--white-s);border-radius:14px;padding:8px 16px 7px;font-size:16px;white-space:nowrap;animation:toast 2s forwards;pointer-events:none}
+@keyframes toast{0%{opacity:0;margin-bottom:-10px}12%,80%{opacity:1;margin-bottom:0}100%{opacity:0}}
 </style>
 </head>
 <body>
 
-<main id="onb" class="screen" hidden></main>
+<main id="onb" hidden></main>
 
-<main id="home" class="screen" hidden></main>
+<main id="map" hidden>
+  <div class="hud" id="hud"></div>
+  <nav class="rail" id="rail" aria-label="메뉴"></nav>
+  <div class="world" id="world"></div>
+  <button class="me" id="meBtn" hidden><img src="assets/cat-idle.webp" alt="">콕이에게 가기</button>
+</main>
 
-<main id="game" class="screen" hidden>
+<main id="gal" hidden></main>
+
+<main id="game" hidden>
   <div class="gbar">
-    <button class="rb" id="back" aria-label="홈으로">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    <button class="sq" id="back" aria-label="뒤로">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="bo" d="M15 5l-7 7 7 7" stroke="#8A4E10" stroke-width="7"/><path d="M15 5l-7 7 7 7" stroke="#fff" stroke-width="3.4"/></svg>
     </button>
-    <div class="title"><span class="ribbon" id="gtitle"></span></div>
+    <div class="title"><span class="plaque" id="gtitle"></span></div>
     <div class="pill time" id="gtime">0:00</div>
   </div>
   <div class="status">
@@ -244,11 +323,9 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
   </div>
   <div class="controls">
     <button class="cbtn on" id="mFill"><span class="o"><span class="ic"></span></span>채우기</button>
-    <button class="cbtn" id="mX"><span class="o"><span class="ic xx"></span></span>X 표시</button>
+    <button class="cbtn" id="mX"><span class="o"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path class="xo" d="M6 6l12 12M18 6L6 18" stroke="#D9AE7A" stroke-width="7.5"/><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3.6"/></svg></span>X 표시</button>
     <span class="sep"></span>
-    <button class="cbtn" id="hint"><span class="o">
-      <svg viewBox="0 0 24 24"><path d="M12 2.6l2.7 5.9 6.4 .7 -4.8 4.3 1.4 6.300 -5.700 -3.200 -5.700 3.200 1.400 -6.300 -4.800 -4.300 6.400 -.7z" fill="#FFC83D" stroke="#FFC83D" stroke-width="2.4" stroke-linejoin="round"/></svg>
-    </span>힌트<em id="hintN">3</em></button>
+    <button class="cbtn" id="hint"><span class="o"><img src="assets/icon-hint.webp" alt=""></span>힌트<em id="hintN">3</em></button>
   </div>
 </main>
 
@@ -262,52 +339,23 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
   const KEY = 'kokkok-nonogram-v1';
   const MAX_LIVES = 3, MAX_HINTS = 3;
   const TRIADS = ['ROY', 'BTG', 'VPR', 'GYO', 'NBI', 'POY', 'TBV'];
-  const PACK_YARN = { easy: ['#5CCBA8', '#3FAE8B'], normal: ['#5DB5EE', '#3D97D3'], hard: ['#B58AE8', '#9670D0'] };
   const WD = ['일', '월', '화', '수', '목', '금', '토'];
-  const LEVELS = {
-    easy: { q: '처음이에요', sub: '5×5 · 규칙부터 차근차근', a: '좋아, 작은 그림부터 같이 풀자냥!' },
-    normal: { q: '조금 해 봤어요', sub: '10×10 · 가장 인기 있는 크기', a: '오, 그럼 10×10으로 가자냥!' },
-    hard: { q: '자신 있어요', sub: '15×15 · 큰 그림에 도전', a: '멋지다냥! 큰 그림으로 바로 가자냥!' },
+  // 난이도마다 지도의 한 구간이에요. 아래(사과 마을)에서 위(버섯 숲)로 올라가요.
+  const ZONE = {
+    easy: { no: 1, name: '사과 마을', house: 'house-apple', q: '처음이에요', sub: '5×5 · 규칙부터 차근차근', a: '좋아, 사과 마을부터<br>같이 가자냥!',
+      decor: { big: ['house-apple', 'house-apple'], mid: ['tree-apple', 'tree-round', 'bush', 'tree-apple'], small: ['flowers', 'fence', 'rocks', 'flowers', 'bush'] } },
+    normal: { no: 2, name: '당근 밭', house: 'house-carrot', q: '조금 해 봤어요', sub: '10×10 · 가장 인기 있는 크기', a: '오, 그럼 당근 밭으로<br>가자냥!',
+      decor: { big: ['house-carrot', 'house-carrot'], mid: ['tree-round', 'sunflower', 'tree-apple', 'sunflower', 'bush'], small: ['pumpkin', 'flowers', 'fence', 'rocks', 'pumpkin'] } },
+    hard: { no: 3, name: '버섯 숲', house: 'house-mushroom', q: '자신 있어요', sub: '15×15 · 큰 그림에 도전', a: '멋지다냥! 버섯 숲으로<br>바로 가자냥!',
+      decor: { big: ['house-mushroom', 'house-mushroom'], mid: ['tree-pine', 'tree-pine', 'tree-round', 'tree-pine'], small: ['mushrooms', 'rocks', 'bush', 'mushrooms', 'flowers'] } },
   };
+  const DSIZE = { 'house-apple': 150, 'house-carrot': 104, 'house-mushroom': 138, 'tree-apple': 112, 'tree-round': 106, 'tree-pine': 92,
+    bush: 70, flowers: 52, fence: 74, sunflower: 50, rocks: 60, mushrooms: 52, pumpkin: 56 };
   const $ = (id) => document.getElementById(id);
-
-  /* ---------- 그림: 고양이 콕이, 실뭉치, 발바닥 ---------- */
-  function cat(mood, headOnly) {
-    const F = '#8E9BB8', E = '#3F3547';
-    const line = `fill="none" stroke="${E}" stroke-width="2.6" stroke-linecap="round"`;
-    const eyes = {
-      happy: `<path d="M29 55q6-7 12 0M59 55q6-7 12 0" ${line}/>`,
-      oops: `<circle cx="35" cy="52" r="5.6" fill="${E}"/><circle cx="65" cy="52" r="5.6" fill="${E}"/><circle cx="37" cy="50" r="1.9" fill="#fff"/><circle cx="67" cy="50" r="1.9" fill="#fff"/>`,
-      sad: `<path d="M29 51q6 6 12 0M59 51q6 6 12 0" ${line}/><path d="M72 58q-3.5 6.5 0 9q3.5-2.5 0-9z" fill="#8FD0F5"/>`,
-    }[mood] || `<circle cx="35" cy="53" r="4.4" fill="${E}"/><circle cx="65" cy="53" r="4.4" fill="${E}"/><circle cx="36.500" cy="51.500" r="1.400" fill="#fff"/><circle cx="66.500" cy="51.500" r="1.400" fill="#fff"/>`;
-    const mouth = mood === 'happy' ? `<path d="M43.500 65h13q0 9-6.500 9t-6.500-9z" fill="#F0625A"/><path d="M46.500 71q3.500-3 7 0q-1 3-3.500 3t-3.500-3z" fill="#F9A8B8"/>`
-      : mood === 'oops' ? `<ellipse cx="50" cy="69" rx="3.200" ry="4" fill="${E}"/>`
-      : mood === 'sad' ? `<path d="M44 70q6-5 12 0" ${line}/>`
-      : `<path d="M43 65.500q3.500 4.500 7 0q3.500 4.500 7 0" ${line}/>`;
-    const paw = mood === 'happy' ? `<ellipse cx="84" cy="74" rx="8" ry="9" fill="#fff"/><circle cx="84" cy="75" r="3" fill="#F9B8C6"/>` : '';
-    return `<svg viewBox="${headOnly ? '4 2 92 86' : '0 0 100 124'}" aria-hidden="true">
-      <path d="M76 108q18-2 15-20" fill="none" stroke="${F}" stroke-width="9" stroke-linecap="round"/>
-      <ellipse cx="50" cy="102" rx="27" ry="21" fill="${F}"/><ellipse cx="50" cy="107" rx="14" ry="15" fill="#fff"/>
-      <rect x="29" y="77" width="42" height="10" rx="5" fill="#3CC4B4"/><rect x="59" y="80" width="9" height="16" rx="4.500" fill="#2BA898"/>
-      <path d="M15 40L20 9q1-5 5-2l22 18z" fill="${F}"/><path d="M85 40L80 9q-1-5-5-2L53 25z" fill="${F}"/>
-      <path d="M22 31l3-16 13 11z" fill="#F9B8C6"/><path d="M78 31l-3-16-13 11z" fill="#F9B8C6"/>
-      <ellipse cx="50" cy="51" rx="39" ry="31" fill="${F}"/>
-      <path d="M50 33c5 11 21 17 21 30 0 12-10 19-21 19s-21-7-21-19c0-13 16-19 21-30z" fill="#fff"/>
-      <ellipse cx="25" cy="63" rx="5.500" ry="3.400" fill="#F9A8B8" opacity=".75"/><ellipse cx="75" cy="63" rx="5.500" ry="3.400" fill="#F9A8B8" opacity=".75"/>
-      ${eyes}<path d="M46.300 59.500h7.400l-3.700 4.200z" fill="#F58CA6" stroke="#F58CA6" stroke-width="1.600" stroke-linejoin="round"/>${mouth}${paw}</svg>`;
-  }
-  function yarn(label, col, dark, loose) {
-    return `<svg class="yarn" viewBox="0 0 100 100" aria-hidden="true">
-      ${loose ? `<path d="M76 78q16 4 12 16" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round"/>` : ''}
-      <circle cx="50" cy="52" r="40" fill="${col}"/>
-      <g fill="none" stroke="${dark}" stroke-width="4.500" stroke-linecap="round" opacity=".55"><path d="M17 40q33-24 66 0"/><path d="M12 60q38 24 76 0"/><path d="M36 16q-16 36 2 72"/><path d="M66 16q14 36-4 73"/></g>
-      <ellipse cx="34" cy="30" rx="10" ry="6" fill="#fff" opacity=".35" transform="rotate(-30 34 30)"/>
-      ${label !== '' ? `<text x="50" y="65" text-anchor="middle" font-family="Jua,sans-serif" font-size="36" fill="#fff" stroke="${dark}" stroke-width="7" paint-order="stroke" stroke-linejoin="round">${label}</text>` : ''}</svg>`;
-  }
-  function paw(col) {
-    return `<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="${col}"><ellipse cx="12" cy="16" rx="6" ry="5"/><circle cx="5" cy="10" r="2.6"/><circle cx="9.500" cy="5.800" r="2.700"/><circle cx="14.500" cy="5.800" r="2.700"/><circle cx="19" cy="10" r="2.600"/></g></svg>`;
-  }
-  const HEART = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.090C13.090 3.810 14.760 3 16.500 3 19.580 3 22 5.420 22 8.500c0 3.780-3.400 6.860-8.550 11.540L12 21.350z';
+  const IMG = (n) => `assets/${n}.webp`;
+  ['cat-idle', 'cat-happy', 'cat-oops', 'cat-sad', 'heart', 'star', 'node-stump', 'node-stone'].forEach((n) => { new Image().src = IMG(n); });
+  function cat(mood) { return `<img class="catimg" src="${IMG('cat-' + (mood || 'idle'))}" alt="">`; }
+  const BACK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="bo" d="M15 5l-7 7 7 7" stroke="#8A4E10" stroke-width="7"/><path d="M15 5l-7 7 7 7" stroke="#fff" stroke-width="3.4"/></svg>';
 
   /* ---------- 저장 ---------- */
   let store = { done: {}, cur: {}, rand: {}, seenHelp: false };
@@ -328,15 +376,28 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
       return PAL[tri[Math.min(2, Math.floor(d * 3))]];
     }));
   }
+  function packOf(lv) { return PACKS.find((p) => p.id === lv); }
+  function countDone(pack) { return pack.puzzles.filter((z) => store.done[`p-${pack.id}-${z.k}`]).length; }
+  // 구간마다 아직 안 푼 첫 단계가 지금 풀 수 있는 단계예요. 그 뒤는 잠겨 있어요.
+  function nextIn(lv) {
+    const z = packOf(lv).puzzles.find((q) => !store.done[`p-${lv}-${q.k}`]);
+    return z ? `p-${lv}-${z.k}` : null;
+  }
+  function stateOf(id) {
+    if (store.done[id]) return 'done';
+    return nextIn(id.split('-')[1]) === id ? 'open' : 'lock';
+  }
+  function nextStage(fromPack) {
+    const pi = PACKS.findIndex((p) => p.id === fromPack);
+    for (let q = pi; q < PACKS.length; q++) { const nx = nextIn(PACKS[q].id); if (nx) return nx; }
+    return null;
+  }
 
   function getPuzzle(id) {
     const [kind, a, b] = id.split('-');
     if (kind === 'p') {
-      const pi = PACKS.findIndex((p) => p.id === a), pack = PACKS[pi], i = pack.puzzles.findIndex((q) => q.k === +b), z = pack.puzzles[i];
-      let next = null;
-      if (i + 1 < pack.puzzles.length) next = `p-${a}-${pack.puzzles[i + 1].k}`;
-      else if (PACKS[pi + 1]) next = `p-${PACKS[pi + 1].id}-${PACKS[pi + 1].puzzles[0].k}`;
-      return { id, name: z.name, label: `${pack.name} ${i + 1}`, size: pack.size, grid: parse(z.rows), colors: colorsOf(z.rows), next, nextLabel: '다음 퍼즐' };
+      const pack = packOf(a), i = pack.puzzles.findIndex((q) => q.k === +b), z = pack.puzzles[i];
+      return { id, pack, i, name: z.name, label: `${pack.name} ${i + 1}단계`, size: pack.size, grid: parse(z.rows), colors: colorsOf(z.rows), next: null, nextLabel: '다음 단계' };
     }
     if (kind === 'daily') {
       const n = +a, d = dateOf(n), grid = generate(10, n);
@@ -356,128 +417,289 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
     colors.forEach((col, i) => { if (col) s += `<rect x="${i % n}" y="${Math.floor(i / n)}" width="1.03" height="1.03" fill="${col}"/>`; });
     return s + '</svg>';
   }
-  function starsHtml(n) { return '★'.repeat(n) + '<i>' + '★'.repeat(3 - n) + '</i>'; }
+  function starsHtml(n) { return [0, 1, 2].map((i) => `<img class="${i < n ? '' : 'off'}" src="${IMG('star')}" alt="">`).join(''); }
   function fmt(t) { return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
-
-  /* ---------- 난이도 고르기 ---------- */
-  function packOf(lv) { return PACKS.find((p) => p.id === lv); }
-  function nextIn(lv) {
-    const z = packOf(lv).puzzles.find((q) => !store.done[`p-${lv}-${q.k}`]);
-    return z ? `p-${lv}-${z.k}` : null;
+  function show(screen) {
+    for (const s of ['onb', 'map', 'gal', 'game']) $(s).hidden = s !== screen;
+    if (screen !== 'map') closePop();
   }
-  function choicesHtml(attr, cur) {
-    return '<div class="choices">' + PACKS.map((p) => `<button class="choice tile ${p.id === cur ? 'cur' : ''}" data-${attr}="${p.id}">${yarn('', ...PACK_YARN[p.id])}<span><b>${LEVELS[p.id].q}</b><small>${LEVELS[p.id].sub}</small></span></button>`).join('') + '</div>';
+  function toast(text) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = text;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2100);
+  }
+
+  /* ---------- 난이도 고르기 (처음 한 번) ---------- */
+  function standHtml(mood) {
+    return `<div class="stand"><span class="glow"></span><img class="stump" src="${IMG('node-stump')}" alt=""><img class="c" src="${IMG('cat-' + (mood || 'idle'))}" alt=""></div>`;
   }
   function renderOnb(lv) {
-    $('home').hidden = true; $('game').hidden = true; $('onb').hidden = false;
+    show('onb');
     $('onb').innerHTML = lv
-      ? `<div class="say">${LEVELS[lv].a}</div><div class="onb-cat">${cat('happy')}</div>
+      ? `<div class="say">${ZONE[lv].a}</div>${standHtml('happy')}
          <div class="onb-go"><button class="pb" data-act="start" data-lv="${lv}">콕콕 시작!</button><button class="btn-txt" data-act="back">다시 고를래요</button></div>`
-      : `<div class="say">안녕! 나는 콕이야.<br>노노그램은 얼마나 해 봤냥?</div><div class="onb-cat">${cat()}</div>${choicesHtml('level')}`;
-  }
-  $('onb').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (b.dataset.level) renderOnb(b.dataset.level);
-    else if (b.dataset.act === 'back') renderOnb();
-    else if (b.dataset.act === 'start') {
-      store.level = b.dataset.lv;
-      if (store.level !== 'easy') store.seenHelp = true;   // 해 본 사람에게는 규칙 설명을 먼저 띄우지 않아요
-      save();
-      $('onb').hidden = true;
-      startGame(nextIn(store.level));
-    }
-  });
-  function setLevel(lv) { store.level = lv; save(); closeSheet(); renderHome(); }
-  function showLevelSheet() {
-    openSheet(`<div class="masc">${cat()}</div><h2>난이도를 골라요</h2><p style="margin-bottom:16px">언제든 다시 바꿀 수 있어요.</p>${choicesHtml('setlevel', store.level)}`);
-  }
-  function pathHtml() {
-    const lv = store.level, pack = packOf(lv), [col, dark] = PACK_YARN[lv];
-    const cnt = pack.puzzles.filter((z) => store.done[`p-${lv}-${z.k}`]).length, nx = nextIn(lv);
-    const up = PACKS[PACKS.indexOf(pack) + 1];
-    let body;
-    if (nx) {
-      const i = pack.puzzles.findIndex((z) => z.k === +nx.split('-')[2]);
-      body = `<div><b>다음 퍼즐 · ${pack.name} ${i + 1}</b><small>${cnt}/${pack.puzzles.length} 완성</small></div><button class="pb" data-play="${nx}">${store.cur[nx] ? '이어서 풀기' : '풀러 가기'}</button>`;
-    } else if (up) {
-      body = `<div><b>${pack.name} 단계를 다 풀었어요!</b><small>이제 ${up.size}×${up.size}에 도전해 봐요</small></div><button class="pb" data-setlevel="${up.id}">${up.name} 도전</button>`;
-    } else {
-      body = `<div><b>모든 그림을 완성했어요!</b><small>랜덤 퍼즐은 끝없이 나와요</small></div>`;
-    }
-    return `<section class="path tile">
-      <div class="path-h"><span class="lvchip">${yarn('', col, dark)}내 난이도 · ${pack.name} ${pack.size}×${pack.size}</span><button class="chg" data-act="level">바꾸기</button></div>
-      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${pack.puzzles.length}" aria-valuenow="${cnt}"><i style="width:${(cnt / pack.puzzles.length) * 100}%;background:${col}"></i></div>
-      <div class="path-b">${body}</div></section>`;
+      : `<div class="say">안녕! 나는 콕이야.<br>노노그램은 얼마나 해 봤냥?</div>${standHtml()}
+         <div class="choices">${PACKS.map((p) => { const Z = ZONE[p.id]; return `<button class="choice" data-level="${p.id}"><img src="${IMG(Z.house)}" alt=""><span><b>${Z.q}</b><small>${Z.sub}</small></span><em>${Z.no}구간<br>${Z.name}</em></button>`; }).join('')}</div>`;
+    window.scrollTo(0, 0);
   }
 
-  /* ---------- 홈 ---------- */
+  /* ---------- 지도 그리기 ---------- */
+  function rng(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  let LAY = null;
+  function layout() {
+    const W = Math.min(window.innerWidth, 480);
+    if (LAY && LAY.W === W) return LAY;
+    const U = W - 76, cx = Math.round(U / 2 + 6), A = Math.round(U * 0.32);
+    const DY = 126, GAP = 250, BOT = 250, TOP = 330;
+    const nodes = [], rivers = [];
+    let d = BOT, g = 0;
+    PACKS.forEach((pack, s) => {
+      if (s) { const prev = d - DY; rivers.push({ d: prev + (DY + GAP) / 2, pack }); d = prev + DY + GAP; }
+      pack.puzzles.forEach((z, i) => {
+        nodes.push({ pack, i, z, id: `p-${pack.id}-${z.k}`, x: Math.round(cx + A * Math.sin(g * Math.PI / 4)), d });   // 레퍼런스처럼 꺾이는 곳마다 단계가 하나씩 놓여요
+        d += DY; g++;
+      });
+    });
+    const H = d - DY + TOP;
+    nodes.forEach((n) => { n.y = H - n.d; });
+    rivers.forEach((r) => { r.y = H - r.d; });
+    // 길: 맨 아래에서 시작해 단계마다 지나가고, 강은 가운데 다리로 건너요.
+    const pts = [[cx, H + 30], [cx, H - 110]];
+    nodes.forEach((n) => {
+      const r = n.i === 0 && rivers.find((rv) => rv.pack === n.pack);
+      if (r) pts.push([cx, r.y + 64], [cx, r.y - 64]);
+      pts.push([n.x, n.y]);
+    });
+    const last = nodes[nodes.length - 1], chest = { x: cx, y: last.y - 150 };
+    pts.push([cx, chest.y + 4]);
+    let pd = `M${pts[0][0]},${pts[0][1]}`;
+    const samples = [];
+    const bez = (a, b, c, e, t) => { const u = 1 - t; return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * e[0], u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * e[1]]; };
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      pd += `C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;
+      for (let t = 0; t < 1; t += 1 / 14) samples.push(bez(p1, c1, c2, p2, t));
+    }
+    // 구간 표지판: 1구간은 출발점 옆, 나머지는 다리 건너편 둑에 세워요.
+    const signs = [{ pack: PACKS[0], x: Math.max(70, cx - 112), y: H - 36 }].concat(rivers.map((r) => ({ pack: r.pack, x: Math.max(70, cx - 112), y: r.y - 40 })));
+    // 소품: 길·발판·강·표지판을 피해서 구간마다 정해진 순서로 흩어 놓아요(매번 같은 자리).
+    const rnd = rng(20261125), deco = [], obst = [];
+    nodes.forEach((n) => obst.push({ x: n.x, y: n.y - 10, r: 48 }));
+    signs.forEach((s) => obst.push({ x: s.x, y: s.y - 50, r: 66 }));
+    obst.push({ x: chest.x, y: chest.y - 30, r: 60 });
+    const free = (x, cy, r) => {
+      for (const p of samples) if (Math.hypot(p[0] - x, p[1] - cy) < r + 24) return false;
+      for (const o of obst) if (Math.hypot(o.x - x, o.y - cy) < r + o.r - 8) return false;
+      for (const rv of rivers) if (Math.abs(rv.y - cy) < r + 46) return false;
+      return true;
+    };
+    const blobs = [];
+    PACKS.forEach((pack, s) => {
+      const y1 = s ? rivers[s - 1].y : H + 20, y0 = s < rivers.length ? rivers[s].y : 0, h = y1 - y0, Z = ZONE[pack.id].decor;
+      for (let k = 0; k < Math.round(h / 260); k++) blobs.push({ x: rnd() * W, y: y0 + rnd() * h, rx: 90 + rnd() * 90, ry: 50 + rnd() * 40 });
+      const list = [];
+      for (let k = 0; k < Math.max(2, Math.round(h / 560)); k++) list.push(Z.big[k % Z.big.length]);
+      for (let k = 0; k < Math.round(h / 118); k++) list.push(Z.mid[k % Z.mid.length]);
+      for (let k = 0; k < Math.round(h / 62); k++) list.push(Z.small[k % Z.small.length]);
+      list.forEach((name) => {
+        const w = Math.round(DSIZE[name] * (0.9 + rnd() * 0.2)), r = w * 0.4;
+        for (let t = 0; t < 80; t++) {
+          const x = -w * 0.15 + rnd() * (W + w * 0.25), y = y0 + 40 + rnd() * (h - 50), cy = y - w * 0.42;
+          if (free(x, cy, r)) { deco.push({ name, x: Math.round(x), y: Math.round(y), w, flip: rnd() < 0.4 }); obst.push({ x, y: cy, r }); break; }
+        }
+      });
+    });
+    LAY = { W, H, cx, nodes, rivers, pd, signs, chest, deco, blobs };
+    return LAY;
+  }
+
+  function riverD(y, W) {
+    let s = '';
+    for (let x = -20; x <= W + 20; x += 10) s += (s ? 'L' : 'M') + x + ',' + (y - 30 + 6 * Math.sin(x / 38)).toFixed(1);
+    for (let x = W + 20; x >= -20; x -= 10) s += 'L' + x + ',' + (y + 30 + 6 * Math.sin(x / 38 + 1.4)).toFixed(1);
+    return s + 'Z';
+  }
+  function groundSvg(L) {
+    const { W, H } = L;
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">`;
+    // 구간마다 풀밭 색을 살짝 달리해요: 당근 밭은 따뜻하게, 버섯 숲은 짙게.
+    const r0 = L.rivers[0].y, r1 = L.rivers[1].y;
+    s += `<rect x="0" y="${r1}" width="${W}" height="${r0 - r1}" fill="#E6D244" opacity=".2"/><rect x="0" y="0" width="${W}" height="${r1}" fill="#5FA638" opacity=".2"/>`;
+    for (const b of L.blobs) s += `<ellipse cx="${b.x.toFixed(0)}" cy="${b.y.toFixed(0)}" rx="${b.rx.toFixed(0)}" ry="${b.ry.toFixed(0)}" fill="#A7C236" opacity=".35"/>`;
+    s += `<path d="${L.pd}" fill="none" stroke="#9DB52F" stroke-opacity=".55" stroke-width="66" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 4)"/>`;
+    s += `<path d="${L.pd}" fill="none" stroke="#F2C664" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>`;
+    s += `<path d="${L.pd}" fill="none" stroke="#FEDF84" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>`;
+    for (const r of L.rivers) {
+      s += `<path d="${riverD(r.y + 7, W)}" fill="#7FA22A" opacity=".55"/><path d="${riverD(r.y, W)}" fill="#47D1DE"/>`;
+      for (let x = 24; x < W; x += 92) s += `<path d="M${x},${r.y - 6 + (x % 3) * 6}q9,-6 18,0" fill="none" stroke="#A6F0F3" stroke-width="3.5" stroke-linecap="round"/>`;
+      // 다리
+      s += `<g transform="translate(${L.cx} ${r.y})"><rect x="-38" y="-50" width="76" height="100" rx="8" fill="#8C5524"/><rect x="-32" y="-50" width="64" height="100" fill="#E0A55A"/>`;
+      for (let k = -38; k <= 40; k += 13) s += `<line x1="-32" x2="32" y1="${k}" y2="${k}" stroke="#B9773A" stroke-width="3"/>`;
+      s += `<rect x="-44" y="-56" width="11" height="112" rx="5" fill="#A0622D" stroke="#6E3F17" stroke-width="2.5"/><rect x="33" y="-56" width="11" height="112" rx="5" fill="#A0622D" stroke="#6E3F17" stroke-width="2.5"/></g>`;
+    }
+    return s + '</svg>';
+  }
+
+  let heroFrom = null;   // 방금 처음 푼 단계: 지도로 돌아오면 콕이가 거기서 다음 단계로 걸어가요
+  let heroY = null, popAt = -1;
+  function heroTarget() {
+    const lv = store.level, pack = packOf(lv);
+    return nextIn(lv) || `p-${lv}-${pack.puzzles[pack.puzzles.length - 1].k}`;
+  }
+  function renderMap(opt) {
+    opt = opt || {};
+    show('map');
+    const L = layout(), lv = store.level, tid = heroTarget(), sectionDone = !nextIn(lv);
+    const tk = L.nodes.findIndex((n) => n.id === tid), t = L.nodes[tk];
+    const fk = heroFrom ? L.nodes.findIndex((n) => n.id === heroFrom && n.pack.id === lv) : -1;
+    heroFrom = null;
+    let h = groundSvg(L);
+    for (const dc of L.deco) {
+      h += `<span class="sh" style="left:${dc.x}px;top:${dc.y - 4}px;width:${Math.round(dc.w * 0.8)}px;height:${Math.round(dc.w * 0.2)}px;z-index:${dc.y - 1}"></span>`;
+      h += `<span class="dc${dc.flip ? ' flip' : ''}" style="left:${dc.x}px;top:${dc.y}px;width:${dc.w}px;z-index:${dc.y}"><img src="${IMG(dc.name)}" alt=""></span>`;
+    }
+    h += `<span class="sh" style="left:${L.chest.x}px;top:${L.chest.y - 4}px;width:76px;height:18px"></span><span class="dc" style="left:${L.chest.x}px;top:${L.chest.y}px;width:86px;z-index:${L.chest.y}"><img src="${IMG('chest')}" alt=""></span>`;
+    for (const s of L.signs) {
+      const Z = ZONE[s.pack.id];
+      h += `<button class="sign" data-act="sections" style="left:${s.x}px;top:${s.y}px;z-index:${s.y}" aria-label="${Z.no}구간 ${Z.name}, 구간 바꾸기"><img src="${IMG('sign')}" alt=""><span><small>${Z.no}구간 · ${s.pack.name}</small><b>${Z.name}</b></span></button>`;
+    }
+    h += `<span class="glow" style="left:${t.x}px;top:${t.y + 2}px;z-index:19000"></span>`;
+    L.nodes.forEach((n, k) => {
+      const st = stateOf(n.id), d = store.done[n.id];
+      h += `<button class="node ${st}${k === fk ? ' just' : ''}" data-node="${k}" style="left:${n.x}px;top:${n.y}px;z-index:${20000 + n.y}" aria-label="${n.pack.name} ${n.i + 1}단계${st === 'done' ? ' 완료' : st === 'lock' ? ' 잠김' : ''}">`
+        + `<img src="${IMG(st === 'lock' ? 'node-stone' : 'node-stump')}" alt=""><b>${n.i + 1}</b>${d ? `<span class="ns">${starsHtml(d.stars)}</span>` : ''}</button>`;
+    });
+    const s0 = fk >= 0 ? L.nodes[fk] : t, nx = L.nodes[tk + 1] && L.nodes[tk + 1].pack === t.pack ? L.nodes[tk + 1] : L.nodes[tk - 1];
+    let side = nx && nx.x > t.x ? 'l' : 'r';
+    if (side === 'r' && t.x + 120 > L.W - 76) side = 'l';
+    if (side === 'l' && t.x - 120 < 0) side = 'r';
+    h += `<div class="hero${opt.drop ? ' drop' : ''}" id="hero" style="left:${s0.x}px;top:${s0.y - 6}px;z-index:39000"><span class="pin ${side}">${sectionDone ? '완성!' : store.cur[tid] ? '이어서!' : '콕콕!'}</span><img src="${IMG('cat-' + (fk >= 0 || sectionDone ? 'happy' : 'idle'))}" alt="콕이"></div>`;
+    const world = $('world');
+    world.style.height = L.H + 'px';
+    world.innerHTML = h;
+    popAt = -1;
+    renderHud();
+    heroY = t.y;
+    const top = (y) => Math.max(0, y - window.innerHeight * 0.58);
+    if (opt.smooth) window.scrollTo({ top: top(t.y), behavior: 'smooth' });
+    else window.scrollTo(0, top(s0.y));
+    if (fk >= 0 && s0 !== t) {
+      setTimeout(() => {
+        const he = $('hero'); if (!he) return;
+        he.style.left = t.x + 'px'; he.style.top = (t.y - 6) + 'px';
+        window.scrollTo({ top: top(t.y), behavior: 'smooth' });
+        setTimeout(() => { const img = he.querySelector('img'); if (img) img.src = IMG('cat-idle'); }, 900);
+      }, 650);
+    }
+    if (opt.pop) setTimeout(() => openPop(tk), 750);
+    updateMe();
+  }
+  function renderHud() {
+    const lv = store.level, pack = packOf(lv), Z = ZONE[lv], c = countDone(pack), len = pack.puzzles.length;
+    $('hud').innerHTML = `<button class="secbtn" data-act="sections" aria-label="구간 바꾸기"><img src="${IMG(Z.house)}" alt=""><span class="t"><b>${Z.no}구간 · ${Z.name}</b><small>${pack.name} ${pack.size}×${pack.size} · ${c}/${len} 완성</small><span class="bar"><i style="width:${(c / len) * 100}%"></i></span></span><span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="bo" d="M5 9l7 7 7-7" stroke="#8A4E10" stroke-width="8"/><path d="M5 9l7 7 7-7" stroke="#fff" stroke-width="4"/></svg></span></button>`;
+    const got = PACKS.reduce((s, p) => s + countDone(p), 0), tDone = store.done['daily-' + ymd(dayOffset(0))];
+    $('rail').innerHTML = `<button data-go="gallery" aria-label="모은 그림 ${got}개"><img src="${IMG('icon-gallery')}" alt=""><span>모은 그림</span>${got ? `<em>${got}</em>` : ''}</button>`
+      + `<button data-go="daily" aria-label="오늘의 퍼즐"><img src="${IMG('icon-calendar')}" alt=""><span>오늘 퍼즐</span>${tDone ? '' : '<i class="dot"></i>'}</button>`
+      + `<button data-go="random" aria-label="랜덤 퍼즐"><img src="${IMG('icon-dice')}" alt=""><span>랜덤</span></button>`
+      + `<button data-go="help" aria-label="게임 방법"><b class="q">?</b><span>방법</span></button>`;
+  }
+  function openPop(k) {
+    closePop();
+    const L = LAY, n = L.nodes[k]; if (!n) return;
+    const st = stateOf(n.id), d = store.done[n.id], pack = n.pack, z = n.z;
+    let h;
+    const up = !nextIn(pack.id) && n.id === heroTarget() && PACKS[PACKS.indexOf(pack) + 1];   // 구간을 다 풀면 콕이가 다음 구간으로 안내해요
+    if (st === 'done') h = `<span class="pp">${thumb(pack.size, colorsOf(z.rows))}</span><b>${z.name}</b><small>${pack.name} ${n.i + 1}단계 · 최고 ${fmt(d.time)}</small><span class="stars">${starsHtml(d.stars)}</span>`
+      + (up ? `<button class="pb sm green" data-setlevel="${up.id}" style="margin-bottom:10px">${ZONE[up.id].name}으로 가기</button>` : '') + `<button class="pb sm ${up ? 'cr' : ''}" data-play="${n.id}" data-fresh="1">다시 풀기</button>`;
+    else if (st === 'open') h = `<span class="pp q">?</span><b>${pack.name} ${n.i + 1}단계</b><small>${pack.size}×${pack.size} · 어떤 그림일까냥?</small><button class="pb sm green" data-play="${n.id}">${store.cur[n.id] ? '이어서 풀기' : '시작'}</button>`;
+    else h = `<img class="pl" src="${IMG('node-stone')}" alt=""><b>${pack.name} ${n.i + 1}단계</b><small>앞 단계를 풀면 열려요</small>`;
+    const U = L.W - 76, left = Math.max(116, Math.min(U - 96, n.x));
+    const el = document.createElement('div');
+    el.className = 'pop'; el.id = 'pop';
+    const above = n.id === heroTarget() && n.pack.id === store.level ? 104 : 24;   // 콕이가 서 있는 단계는 콕이 머리 위로
+    el.style.cssText = `left:${left}px;top:${n.y - above}px;z-index:45000;--ax:${n.x - left + 112}px`;
+    el.innerHTML = h;
+    $('world').appendChild(el);
+    popAt = k;
+    const r = el.getBoundingClientRect();
+    if (r.top < 96) window.scrollBy({ top: r.top - 106, behavior: 'smooth' });
+  }
+  function closePop() { const p = $('pop'); if (p) p.remove(); popAt = -1; }
+  function updateMe() {
+    const b = $('meBtn');
+    if ($('map').hidden || heroY == null) { b.hidden = true; return; }
+    const off = heroY - (window.scrollY + window.innerHeight * 0.58);
+    b.hidden = Math.abs(off) < window.innerHeight * 0.5;
+  }
+  window.addEventListener('scroll', updateMe, { passive: true });
+  $('meBtn').onclick = () => window.scrollTo({ top: Math.max(0, heroY - window.innerHeight * 0.58), behavior: 'smooth' });
+
+  /* ---------- 구간 바꾸기 ---------- */
+  function showSections() {
+    closePop();
+    openSheet(`<div class="masc">${cat()}</div><h2>구간 고르기</h2><p>어느 구간에서 풀어 볼까냥?<br>바꿔도 푼 그림과 별은 그대로 남아요.</p><div class="secs">`
+      + PACKS.slice().reverse().map((p) => {
+        const Z = ZONE[p.id], c = countDone(p), len = p.puzzles.length, cur = p.id === store.level;
+        return `<div class="sc ${cur ? 'cur' : ''}"><img src="${IMG(Z.house)}" alt=""><span class="t"><b>${Z.no}구간 · ${Z.name}</b><small>${p.name} ${p.size}×${p.size} · ${c}/${len} 완성</small><span class="bar"><i style="width:${(c / len) * 100}%"></i></span></span>`
+          + (cur ? '<span class="here">지금 여기</span>' : `<button class="pb sm" data-setlevel="${p.id}">가기</button>`) + '</div>';
+      }).join('') + '</div><div class="btns"><button class="btn-txt" data-act="close">닫기</button></div>');
+  }
+  function setLevel(lv) {
+    store.level = lv; save(); closeSheet();
+    renderMap({ smooth: true, drop: true });
+    toast(`${ZONE[lv].no}구간 ${ZONE[lv].name}으로 왔어요`);
+  }
+
+  /* ---------- 오늘의 퍼즐 · 랜덤 ---------- */
   function streak() {
     let k = store.done['daily-' + ymd(dayOffset(0))] ? 0 : 1, n = 0;
     while (store.done['daily-' + ymd(dayOffset(k))]) { n++; k++; }
     return n;
   }
-
-  function renderHome() {
-    const today = dayOffset(0), tid = 'daily-' + ymd(today);
-    const tDone = store.done[tid], tIng = store.cur[tid];
-    const st = streak();
-    const total = PACKS.reduce((s, p) => s + p.puzzles.length, 0);
-    const got = PACKS.reduce((s, p) => s + p.puzzles.filter((z) => store.done[`p-${p.id}-${z.k}`]).length, 0);
-    let h = `
-      <header class="top">
-        <div class="logo">콕콕 노노그램</div>
-        <span class="pill" aria-label="모은 그림 ${got}개, 전체 ${total}개">${paw('#F7A540')}${got}/${total}</span>
-        <button class="rb" data-act="help" aria-label="게임 방법">?</button>
-      </header>
-      <section class="daily">
-        <span class="tag">오늘의 퍼즐</span>
-        <h2>${today.getMonth() + 1}월 ${today.getDate()}일 ${WD[today.getDay()]}요일</h2>
-        <p>${tDone ? '오늘 퍼즐은 벌써 풀었어요!' : st > 0 ? `${st}일째 매일 푸는 중이에요` : '콕이가 새 퍼즐을 가져왔어요'}</p>
-        <button class="pb yel" data-play="${tid}">${tDone ? '한 번 더 풀기' : tIng ? '이어서 풀기' : '콕콕 시작!'}</button>
-        <div class="masc">${cat(tDone ? 'happy' : '')}</div>
-        <div class="week">`;
+  function showDaily() {
+    const today = dayOffset(0), tid = 'daily-' + ymd(today), tDone = store.done[tid], tIng = store.cur[tid], st = streak();
+    let h = `<img class="sic" src="${IMG('icon-calendar')}" alt=""><h2>오늘의 퍼즐</h2><p>${tDone ? '오늘 퍼즐은 벌써 풀었어요!' : st ? `${st}일째 매일 푸는 중이에요` : '매일 새 10×10 퍼즐이 나와요'}</p><div class="week">`;
     for (let k = 6; k >= 0; k--) {
       const d = dayOffset(k), id = 'daily-' + ymd(d), done = store.done[id];
-      h += `<button class="${done ? 'done' : ''} ${k === 0 ? 'today' : ''}" data-play="${id}" aria-label="${d.getMonth() + 1}월 ${d.getDate()}일 퍼즐${done ? ' 완료' : ''}">${WD[d.getDay()]}${done ? paw('#B5701A') : `<b>${d.getDate()}</b>`}</button>`;
+      h += `<button class="${done ? 'done' : ''} ${k === 0 ? 'today' : ''}" data-play="${id}" aria-label="${d.getMonth() + 1}월 ${d.getDate()}일 퍼즐${done ? ' 완료' : ''}">${WD[d.getDay()]}${done ? `<img src="${IMG('star')}" alt="">` : `<b>${d.getDate()}</b>`}</button>`;
     }
-    h += `</div></section>${pathHtml()}
-      <section class="sec">
-        <div class="sec-h"><h3>${paw('#FF7E6B')}랜덤 퍼즐</h3><span>풀 때마다 새로 나와요</span></div>
-        <div class="rand">`;
-    for (const [size, name, w, col, dark] of [[5, '금방 풀어요', 34, '#FF8E7A', '#E8705C'], [10, '딱 좋아요', 42, '#FFC83D', '#EBA91E'], [15, '오래 걸려요', 50, '#3CC4B4', '#2BA898']]) {
+    h += `</div><div class="btns"><button class="pb" data-play="${tid}">${tDone ? '한 번 더 풀기' : tIng ? '이어서 풀기' : '오늘 퍼즐 시작'}</button><button class="btn-txt" data-act="close">닫기</button></div>`;
+    openSheet(h);
+  }
+  function showRandom() {
+    let h = `<img class="sic" src="${IMG('icon-dice')}" alt=""><h2>랜덤 퍼즐</h2><p>풀 때마다 새 무늬가 나와요</p><div class="secs">`;
+    for (const [size, txt] of [[5, '금방 풀어요'], [10, '딱 좋아요'], [15, '오래 걸려요']]) {
       const ing = store.rand[size] && store.cur[store.rand[size]];
-      h += `<button class="tile" data-rand="${size}"><span class="y"><span style="width:${w}px;height:${w}px">${yarn('', col, dark, !!ing)}</span></span><b>${size}×${size}</b><small>${ing ? '이어서 풀기' : name}</small></button>`;
+      h += `<button class="sc" data-rand="${size}"><span class="sz">${size}×${size}</span><span class="t"><b>${txt}</b><small>${ing ? '풀던 퍼즐이 있어요' : '새 퍼즐'}</small></span><span class="pb sm ${ing ? '' : 'green'}">${ing ? '이어서' : '시작'}</span></button>`;
     }
-    h += `</div></section>`;
-    for (const pack of [packOf(store.level), ...PACKS.filter((p) => p.id !== store.level)]) {
-      const cnt = pack.puzzles.filter((z) => store.done[`p-${pack.id}-${z.k}`]).length, [col, dark] = PACK_YARN[pack.id];
-      h += `<section class="sec"><div class="sec-h"><h3>${paw(col)}${pack.name}</h3><span>${pack.size}×${pack.size} · ${cnt}/${pack.puzzles.length}</span></div><div class="cards">`;
-      pack.puzzles.forEach((z, i) => {
-        const id = `p-${pack.id}-${z.k}`, done = store.done[id], ing = store.cur[id];
-        h += `<button class="card tile ${done ? 'done' : ing ? 'ing' : ''}" data-play="${id}" aria-label="${pack.name} ${i + 1}${done ? ' ' + z.name + ' 완료' : ing ? ' 진행 중' : ''}">`;
-        h += done ? `<span class="pic">${thumb(pack.size, colorsOf(z.rows))}</span><span class="cap">${z.name}</span><span class="stars">${starsHtml(done.stars)}</span>`
-                  : `${yarn(i + 1, col, dark, !!ing)}<span class="cap">${ing ? '푸는 중' : ' '}</span>`;
-        h += `</button>`;
-      });
-      h += `</div></section>`;
-    }
-    h += `<p class="foot">기록은 이 브라우저에만 저장돼요</p>`;
-    $('home').innerHTML = h;
-    $('home').hidden = false;
+    openSheet(h + `</div><div class="btns"><button class="btn-txt" data-act="close">닫기</button></div>`);
   }
 
-  $('home').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (b.dataset.play) startGame(b.dataset.play);
-    else if (b.dataset.rand) {
-      const size = +b.dataset.rand, saved = store.rand[size];
-      startGame(saved && store.cur[saved] ? saved : newRandom(size));
-    } else if (b.dataset.act === 'help') showHelp();
-    else if (b.dataset.act === 'level') showLevelSheet();
-    else if (b.dataset.setlevel) setLevel(b.dataset.setlevel);
-  });
+  /* ---------- 모은 그림 ---------- */
+  let galTab = null;
+  function renderGallery(tab) {
+    if (tab) galTab = tab;
+    if (!galTab) galTab = store.level || 'easy';
+    show('gal');
+    const pack = packOf(galTab), total = PACKS.reduce((s, p) => s + p.puzzles.length, 0), got = PACKS.reduce((s, p) => s + countDone(p), 0);
+    let h = `<header class="ghead"><button class="sq" data-act="tomap" aria-label="지도로">${BACK}</button><h1 class="ol">모은 그림</h1><span class="pill"><img src="${IMG('icon-gallery')}" alt="">${got}/${total}</span></header>
+      <p class="gsub">푼 그림을 누르면 크게 보고 다시 풀 수 있어요.</p>
+      <div class="tabs">${PACKS.map((p) => `<button class="${p.id === galTab ? 'on' : ''}" data-tab="${p.id}">${p.name}<small>${countDone(p)}/${p.puzzles.length}</small></button>`).join('')}</div><div class="frames">`;
+    pack.puzzles.forEach((z, i) => {
+      const id = `p-${pack.id}-${z.k}`, d = store.done[id], st = stateOf(id);
+      h += d
+        ? `<button class="fr done" data-gal="${id}" aria-label="${z.name}, 별 ${d.stars}개"><span class="cv">${thumb(pack.size, colorsOf(z.rows))}</span><span class="cap">${z.name}</span><span class="stars">${starsHtml(d.stars)}</span></button>`
+        : `<button class="fr q ${st === 'open' ? 'open' : 'lockd'}" data-gal="${id}" aria-label="${i + 1}단계 ${st === 'open' ? '도전 가능' : '잠김'}"><span class="cv">?</span><span class="cap">${i + 1}단계</span>${st === 'open' ? '<span class="go">도전!</span>' : '<span class="stars"></span>'}</button>`;
+    });
+    $('gal').innerHTML = h + '</div>';
+  }
+  function showGalDetail(id) {
+    const p = getPuzzle(id), d = store.done[id];
+    openSheet(`<div class="frame big"><div class="pic">${thumb(p.size, p.colors)}</div><span>${p.name}</span></div>
+      <p>${p.label} · ${p.size}×${p.size}</p><div class="bigstars">${starsHtml(d.stars)}</div>
+      <div class="meta"><div><b>${fmt(d.time)}</b>최고 기록</div></div>
+      <div class="btns"><button class="pb" data-play="${id}" data-fresh="1" data-from="gal">다시 풀기</button><button class="btn-txt" data-act="close">닫기</button></div>`);
+  }
 
   /* ---------- 게임 ---------- */
   let G = null, els = [], rcEls = [], ccEls = [], hl = null, drag = null, timer = null, sayT = null;
@@ -486,23 +708,26 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
   function say(text, mood, hold) {
     $('bubble').textContent = text;
     const m = $('gmasc');
-    m.innerHTML = cat(mood, true);
+    m.innerHTML = cat(mood);
     if (mood) { m.classList.remove('jump'); void m.offsetWidth; m.classList.add('jump'); }
     clearTimeout(sayT);
-    if (mood && !hold) sayT = setTimeout(() => { if (G && !G.won && !G.over) m.innerHTML = cat('', true); }, 1600);
+    if (mood && !hold) sayT = setTimeout(() => { if (G && !G.won && !G.over) m.innerHTML = cat(); }, 1600);
   }
 
-  function startGame(id, fresh) {
+  function startGame(id, fresh, from) {
     const p = getPuzzle(id), n = p.size;
     const s = !fresh && store.cur[id];
+    // 지도에서 지금 단계를 시작하면 그 구간이 내 구간이 돼요.
+    if (p.pack && from !== 'gal' && stateOf(id) === 'open' && store.level !== p.pack.id) { store.level = p.pack.id; save(); }
+    heroFrom = null;
     G = {
-      p, n, sol: p.grid.flat(), clues: allClues(p.grid),
+      p, n, from: from || 'map', sol: p.grid.flat(), clues: allClues(p.grid),
       cells: s ? s.cells.slice() : new Array(n * n).fill(0),
       lives: s ? s.lives : MAX_LIVES, hints: s ? s.hints : MAX_HINTS,
       time: s ? s.time : 0, miss: s ? s.miss : 0, revived: s ? s.revived : false,
       mode: 'fill', won: false, over: false,
     };
-    $('home').hidden = true; $('game').hidden = false;
+    show('game');
     $('gtitle').textContent = p.label;
     say(s ? '이어서 풀자냥!' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
     buildBoard();
@@ -524,7 +749,7 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
   function buildBoard() {
     const n = G.n, { rows, cols } = G.clues;
     const maxR = Math.max(1, ...rows.map((c) => c.length)), maxC = Math.max(1, ...cols.map((c) => c.length));
-    const W = Math.min(window.innerWidth, 480) - 48, H = Math.max(230, window.innerHeight - 340);
+    const W = Math.min(window.innerWidth, 480) - 52, H = Math.max(230, window.innerHeight - 350);
     let cell = Math.min(48, Math.floor((W - 14) / (n + maxR * 0.72)));
     let fs = 0, clueW = 0, clueH = 0;
     for (let k = 0; k < 4; k++) {
@@ -645,7 +870,7 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
 
   function renderStatus() {
     let h = '';
-    for (let i = 0; i < MAX_LIVES; i++) h += `<svg viewBox="0 0 24 24" class="${i < G.lives ? '' : 'off'}"><path d="${HEART}" fill="#FF7E6B"/><ellipse class="hi" cx="7.500" cy="8" rx="2.200" ry="1.500" fill="#fff" opacity=".6" transform="rotate(-35 7.500 8)"/></svg>`;
+    for (let i = 0; i < MAX_LIVES; i++) h += `<img class="${i < G.lives ? '' : 'off'}" src="${IMG('heart')}" alt="">`;
     $('hearts').innerHTML = h;
     $('hearts').setAttribute('aria-label', `남은 하트 ${Math.max(0, G.lives)}개`);
     $('hintN').textContent = G.hints;
@@ -725,10 +950,10 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
   grid.addEventListener('contextmenu', (e) => e.preventDefault());
 
   /* ---------- 결과 ---------- */
-  function openSheet(html) { $('sheet').innerHTML = html; $('overlay').hidden = false; }
+  function openSheet(html) { document.querySelectorAll('.toast').forEach((t) => t.remove()); $('sheet').innerHTML = html; $('overlay').hidden = false; }
   function closeSheet() { $('overlay').hidden = true; $('sheet').innerHTML = ''; }
   function confetti() {
-    const cols = ['#FFC83D', '#FF7E6B', '#3CC4B4', '#56AEE8', '#A78BE8', '#F79AB0', '#fff'];
+    const cols = ['#FFD23A', '#FF9E3B', '#6CC63A', '#47D1DE', '#FF5184', '#FF5943'];
     let h = '<div class="confetti">';
     for (let i = 0; i < 24; i++) h += `<i style="left:${Math.random() * 100}%;background:${cols[i % cols.length]};animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * 0.5}s"></i>`;
     return h + '</div>';
@@ -741,22 +966,32 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
     delete store.cur[id];
     if (store.rand[G.n] === id) delete store.rand[G.n];
     save();
+    const p = G.p, time = G.time, miss = G.miss, from = G.from;
+    let title = '그림 완성!', sub = miss === 0 ? '한 번도 안 틀렸어요. 최고예요!' : '숨어 있던 그림을 찾았어요';
+    if (p.pack) {
+      if (!prev && from === 'map') heroFrom = id;
+      p.next = from === 'gal' ? null : nextStage(p.pack.id);
+      if (!prev && !nextIn(p.pack.id)) {
+        const Z = ZONE[p.pack.id], up = PACKS[PACKS.indexOf(p.pack) + 1];
+        title = `${Z.name} 완성!`;
+        sub = up ? `다음은 ${ZONE[up.id].no}구간 ${ZONE[up.id].name}이에요` : '모든 구간을 다 풀었어요!';
+      } else if (!prev) sub += ' · 모은 그림에 넣었어요';
+    }
     highlight(null); renderStatus();
     say('우와, 그림이 나왔다냥!', 'happy', true);
     $('board').classList.add('won');
-    const p = G.p, time = G.time, miss = G.miss;
     setTimeout(() => {
       if (!G || G.p !== p) return;
       openSheet(`${confetti()}
         <div class="masc happy">${cat('happy')}</div>
-        <h2>그림 완성!</h2>
-        <p>${miss === 0 ? '한 번도 안 틀렸어요. 최고예요!' : '숨어 있던 그림을 찾았어요'}</p>
+        <h2>${title}</h2>
+        <p>${sub}</p>
         <div class="frame"><div class="pic">${thumb(p.size, p.colors)}</div><span>${p.name}</span></div>
-        <div class="bigstars stars">${starsHtml(stars)}</div>
+        <div class="bigstars">${starsHtml(stars)}</div>
         <div class="meta"><div><b>${fmt(time)}</b>걸린 시간</div><div><b>${miss}번</b>실수</div></div>
         <div class="btns">
           ${p.next ? `<button class="pb" data-act="next">${p.nextLabel}</button>` : ''}
-          <button class="pb ${p.next ? 'wh' : ''}" data-act="home">홈으로</button>
+          <button class="pb ${p.next ? 'cr' : ''}" data-act="home">${from === 'gal' ? '모은 그림으로' : '지도로'}</button>
         </div>`);
     }, 1300);
   }
@@ -770,14 +1005,15 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
       <h2>하트를 다 썼어요</h2>
       <p>${G.revived ? '괜찮아요, 처음부터 다시 콕콕 해 봐요.' : '하트 하나를 받아서 이어 풀 수 있어요.<br>퍼즐마다 딱 한 번이에요.'}</p>
       <div class="btns">
-        ${G.revived ? '' : '<button class="pb" data-act="revive">하트 1개 받고 이어하기</button>'}
-        <button class="pb ${G.revived ? '' : 'wh'}" data-act="restart">처음부터 다시</button>
-        <button class="btn-txt" data-act="home">홈으로</button>
+        ${G.revived ? '' : '<button class="pb green" data-act="revive">하트 1개 받고 이어하기</button>'}
+        <button class="pb ${G.revived ? '' : 'cr'}" data-act="restart">처음부터 다시</button>
+        <button class="btn-txt" data-act="home">${G.from === 'gal' ? '모은 그림으로' : '지도로'}</button>
       </div>`);
   }
 
   function showHelp() {
     store.seenHelp = true; save();
+    closePop();
     openSheet(`
       <div class="masc">${cat()}</div>
       <h2>이렇게 풀어요</h2>
@@ -787,47 +1023,94 @@ button.tile:active{transform:translateY(4px);box-shadow:0 1px 0 var(--panel-d)}
         <li><b>1</b><span>숫자는 그 줄에서 <strong>연달아 채울 칸 수</strong>예요. 숫자가 여럿이면 사이에 빈칸이 한 칸 넘게 있어요.</span></li>
         <li><b>2</b><span>비워야 하는 칸은 <strong>X 표시</strong>를 해 두면 편해요. 줄을 다 채우면 나머지는 저절로 X가 돼요.</span></li>
         <li><b>3</b><span>틀리면 하트가 하나 줄어요. <strong>하트 3개, 힌트 3개</strong>로 시작하고, 손가락을 끌면 한 줄을 쭉 칠해요.</span></li>
+        <li><b>4</b><span>지도의 단계를 하나씩 풀며 올라가요. 맨 위 버튼으로 <strong>구간(난이도)을 언제든</strong> 바꿀 수 있어요.</span></li>
       </ul>
+      <p class="note">기록은 이 브라우저에만 저장돼요</p>
       <div class="btns"><button class="pb" data-act="close">알겠어요!</button></div>`);
   }
 
-  function goHome() {
-    persist(); clearInterval(timer); clearTimeout(sayT); G = null; closeSheet();
-    $('game').hidden = true;
-    renderHome();
+  function goBack() {
+    persist(); clearInterval(timer); clearTimeout(sayT);
+    const from = G ? G.from : 'map';
+    G = null; closeSheet();
+    if (from === 'gal') { renderGallery(); window.scrollTo(0, 0); } else renderMap();
   }
-  $('back').onclick = goHome;
+  $('back').onclick = goBack;
 
-  $('overlay').addEventListener('click', (e) => {
-    const lvBtn = e.target.closest('button[data-setlevel]');
-    if (lvBtn) { setLevel(lvBtn.dataset.setlevel); return; }
-    const b = e.target.closest('button[data-act]');
-    if (!b) { if (e.target === $('overlay') && (!G || (!G.won && !G.over))) closeSheet(); return; }
-    const a = b.dataset.act;
-    if (a === 'close') closeSheet();
-    else if (a === 'home') goHome();
-    else if (a === 'restart') { closeSheet(); startGame(G.p.id, true); persist(); }
+  /* ---------- 누르기 ---------- */
+  document.addEventListener('click', (e) => {
+    const tg = e.target;
+    if (tg.closest('#grid') || tg.closest('.controls') || tg.closest('#back')) return;
+    const b = tg.closest('[data-play],[data-rand],[data-setlevel],[data-act],[data-tab],[data-gal],[data-node],[data-level],[data-go],#hero');
+    if (!b) {
+      if (tg === $('overlay')) { if (!G || (!G.won && !G.over)) closeSheet(); }
+      else if (!tg.closest('#pop')) closePop();
+      return;
+    }
+    const ds = b.dataset;
+    if (b.id === 'hero') { const k = LAY.nodes.findIndex((n) => n.id === heroTarget()); if (popAt === k) closePop(); else openPop(k); return; }
+    if (ds.node) { const k = +ds.node; if (popAt === k) closePop(); else openPop(k); return; }
+    if (ds.level) { renderOnb(ds.level); return; }
+    if (ds.play) {
+      const from = ds.from || (!$('gal').hidden ? 'gal' : G ? G.from : 'map');
+      closeSheet(); closePop(); startGame(ds.play, !!ds.fresh, from); return;
+    }
+    if (ds.rand) { const size = +ds.rand, saved = store.rand[size]; closeSheet(); startGame(saved && store.cur[saved] ? saved : newRandom(size), false, 'map'); return; }
+    if (ds.setlevel) { setLevel(ds.setlevel); return; }
+    if (ds.tab) { renderGallery(ds.tab); return; }
+    if (ds.gal) {
+      const st = stateOf(ds.gal);
+      if (st === 'done') showGalDetail(ds.gal);
+      else if (st === 'open') startGame(ds.gal, false, 'gal');
+      else toast('앞 단계를 풀면 열려요');
+      return;
+    }
+    if (ds.go) {
+      closePop();
+      if (ds.go === 'gallery') { renderGallery(store.level); window.scrollTo(0, 0); }
+      else if (ds.go === 'daily') showDaily();
+      else if (ds.go === 'random') showRandom();
+      else showHelp();
+      return;
+    }
+    const a = ds.act;
+    if (a === 'start') {
+      store.level = ds.lv;
+      if (store.level !== 'easy') store.seenHelp = true;   // 해 본 사람에게는 규칙 설명을 먼저 띄우지 않아요
+      save();
+      renderMap({ drop: true, pop: true });
+    } else if (a === 'back') renderOnb();
+    else if (a === 'sections') showSections();
+    else if (a === 'close') closeSheet();
+    else if (a === 'tomap') renderMap();
+    else if (a === 'home') goBack();
+    else if (a === 'restart') { closeSheet(); startGame(G.p.id, true, G.from); persist(); }
     else if (a === 'revive') { G.lives = 1; G.revived = true; G.over = false; closeSheet(); renderStatus(); say('다시 힘내자냥!', 'happy'); persist(); }
     else if (a === 'next') {
-      const nx = G.p.next; closeSheet();
-      startGame(nx.startsWith('rand:') ? newRandom(+nx.slice(5)) : nx);
+      const nx = G.p.next, from = G.from; closeSheet();
+      startGame(nx.startsWith('rand:') ? newRandom(+nx.slice(5)) : nx, false, from);
     }
   });
 
+  let rsT = null;
   window.addEventListener('resize', () => {
-    if (!G || $('game').hidden) return;
-    const won = G.won;
-    buildBoard();
-    for (let i = 0; i < G.n * G.n; i++) paint(i);
-    for (let i = 0; i < G.n; i++) { markClues('r', i); markClues('c', i); }
-    if (won) $('board').classList.add('won');
+    if (G && !$('game').hidden) {
+      const won = G.won;
+      buildBoard();
+      for (let i = 0; i < G.n * G.n; i++) paint(i);
+      for (let i = 0; i < G.n; i++) { markClues('r', i); markClues('c', i); }
+      if (won) $('board').classList.add('won');
+    } else if (!$('map').hidden) {
+      clearTimeout(rsT);
+      rsT = setTimeout(() => { if (LAY && LAY.W !== Math.min(window.innerWidth, 480)) renderMap(); else updateMe(); }, 150);
+    }
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
   window.addEventListener('pagehide', persist);
 
-  // 처음 온 사람은 난이도부터 골라요. 이미 풀던 기록이 있으면 쉬움으로 두고 홈에서 바꿀 수 있어요.
+  // 처음 온 사람은 난이도부터 골라요. 이미 풀던 기록이 있으면 쉬움 구간으로 두고 지도에서 바꿀 수 있어요.
   if (!store.level && (Object.keys(store.done).length || Object.keys(store.cur).length)) { store.level = 'easy'; save(); }
-  if (store.level) renderHome(); else renderOnb();
+  if (store.level) renderMap(); else renderOnb();
 })();
 </script>
 </body>
