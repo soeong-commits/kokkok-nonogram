@@ -24,9 +24,9 @@
   --num:"Nunito","Jua",-apple-system,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%}
+html,body{margin:0;min-height:100%;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{color:var(--tx);font-family:var(--kr);background:var(--grass) repeating-linear-gradient(135deg,transparent 0 64px,rgba(150,178,40,.24) 64px 128px);
-  -webkit-font-smoothing:antialiased;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
 img{-webkit-user-drag:none}
 [hidden]{display:none!important}
@@ -45,7 +45,7 @@ svg{display:block}
 .sq:active{transform:translateY(2px)}
 .pill{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 13px;border-radius:99px;background:var(--cream);border:3px solid var(--cream-s);font-family:var(--num);font-weight:900;font-size:15px;color:var(--tx)}
 .pill img{width:22px;height:22px;object-fit:contain}
-.btn-txt{height:38px;font-size:16px;color:var(--sub)}
+.btn-txt{height:44px;font-size:16px;color:var(--sub)}
 .stars{display:flex;justify-content:center}
 .stars img{width:16px;height:16px;object-fit:contain}
 .stars img.off{filter:grayscale(1) brightness(1.3);opacity:.45}
@@ -91,7 +91,7 @@ svg{display:block}
 .node.just .ns img{animation:starpop .6s cubic-bezier(.3,1.6,.5,1) both}
 .node.just .ns img:nth-child(2){animation-delay:.12s}.node.just .ns img:nth-child(3){animation-delay:.24s}
 @keyframes starpop{from{transform:scale(0) rotate(-40deg)}}
-.hero{position:absolute;width:80px;transform:translate(-50%,-100%);transition:left .8s ease-in-out,top .8s ease-in-out;cursor:pointer}
+.hero{position:absolute;display:block;width:80px;transform:translate(-50%,-100%);transition:left .8s ease-in-out,top .8s ease-in-out;cursor:pointer}
 .hero img{display:block;width:100%;animation:bob 2.2s ease-in-out infinite}
 .hero.drop{animation:drop .7s cubic-bezier(.3,1.4,.5,1) both}
 @keyframes drop{from{transform:translate(-50%,-190%);opacity:0}}
@@ -232,9 +232,10 @@ svg{display:block}
 .sep{width:3px;height:40px;margin-top:12px;border-radius:2px;background:rgba(74,42,20,.25)}
 
 /* ---------- 시트 ---------- */
-.overlay{position:fixed;inset:0;z-index:100;background:rgba(40,28,10,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
-.sheet{position:relative;width:100%;max-width:440px;background:var(--cream);border:3px solid var(--cream-s);border-bottom:0;border-radius:28px 28px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));text-align:center;animation:up .32s cubic-bezier(.3,1.4,.5,1)}
-@media (min-width:520px){.overlay{align-items:center}.sheet{border-radius:28px;border-bottom:3px solid var(--cream-s);}}
+/* 시트가 화면보다 길면(작은 폰의 도움말·완성 시트) 위가 잘리지 않게, 어두운 배경을 스크롤 영역으로 두고 시트는 margin-top:auto 로 바닥에 붙여요 */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(40,28,10,.5);display:flex;flex-direction:column;align-items:center;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-top:calc(env(safe-area-inset-top) + 96px);animation:fade .2s}
+.sheet{position:relative;flex-shrink:0;margin-top:auto;width:100%;max-width:440px;background:var(--cream);border:3px solid var(--cream-s);border-bottom:0;border-radius:28px 28px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));text-align:center;animation:up .32s cubic-bezier(.3,1.4,.5,1)}
+@media (min-width:520px){.sheet{margin-bottom:auto;border-radius:28px;border-bottom:3px solid var(--cream-s);}}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(60px);opacity:0}}
 .sheet .masc{width:104px;margin:-86px auto 0}
@@ -264,7 +265,7 @@ svg{display:block}
 .sc .here{flex:none;font-size:14px;color:var(--or-d)}
 .sc .sz{flex:none;width:60px;font-family:var(--num);font-weight:900;font-size:19px;text-align:center}
 .sc .pb{flex:none}
-.week{display:flex;gap:5px;margin:16px 0 0}
+.week{display:flex;gap:4px;margin:16px 0 0}
 .week button{flex:1;height:58px;border-radius:13px;background:#fff;border:2.5px solid var(--white-s);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12.5px;color:var(--sub)}
 .week b{font-family:var(--num);font-weight:900;font-size:16px;color:var(--tx)}
 .week img{width:20px;height:20px}
@@ -284,10 +285,59 @@ svg{display:block}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
 .toast{position:fixed;z-index:200;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translateX(-50%);background:#fff;border:3px solid var(--white-s);border-radius:14px;padding:8px 16px 7px;font-size:16px;white-space:nowrap;animation:toast 2s forwards;pointer-events:none}
 @keyframes toast{0%{opacity:0;margin-bottom:-10px}12%,80%{opacity:1;margin-bottom:0}100%{opacity:0}}
+/* 키가 작은 폰(사파리 주소창·아래 막대를 뺀 높이): 시트를 줄여 맨 아래 버튼까지 한 화면에 들어오게 해요 */
+@media (max-height:760px){
+  .overlay{padding-top:calc(env(safe-area-inset-top) + 74px)}
+  .sheet{padding-top:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .sheet .masc{width:84px;margin-top:-70px}
+  .sheet .sic{width:72px;margin-top:-50px}
+  .sheet h2{font-size:25px;margin:2px 0}
+  .sheet .frame{margin-top:10px}
+  .sheet .frame svg{width:96px;height:96px}
+  .sheet .frame.big svg{width:132px;height:132px}
+  .sheet .frame span{font-size:16px;margin-top:2px}
+  .sheet .frame+p{margin-top:8px}
+  .sheet .bigstars{margin-top:8px}
+  .sheet .bigstars img{width:38px;height:38px}
+  .sheet .meta{margin-top:8px}
+  .btns{gap:6px;margin-top:14px}
+  .how{gap:6px;margin-top:10px}
+  .how li{font-size:14px;line-height:1.42;padding:7px 10px}
+  .demo{margin-top:10px}
+  .note{margin-top:8px!important}
+  .secs{gap:8px;margin-top:12px}
+  .sc{padding:6px 10px 6px 6px}
+  .sc img{width:50px;height:50px}
+}
+/* 아이폰 SE(2·3세대) 사파리처럼 더 낮은 화면 */
+@media (max-height:620px){
+  .overlay{padding-top:calc(env(safe-area-inset-top) + 62px)}
+  .sheet{padding-top:8px}
+  .sheet .masc{width:72px;margin-top:-60px}
+  .sheet h2{font-size:23px}
+  .sheet p{font-size:15px;line-height:1.38}
+  .sheet .frame{padding:6px 6px 4px;border-width:6px}
+  .sheet .frame svg{width:78px;height:78px}
+  .sheet .frame.big svg{width:110px;height:110px}
+  .sheet .bigstars img{width:32px;height:32px}
+  .sheet .meta div{padding:4px 14px 3px}
+  .sheet .meta b{font-size:18px}
+  .pb{height:50px}
+  .btns{margin-top:10px}
+  .how li{font-size:13.5px;padding:6px 9px}
+  .demo{display:none}
+}
+/* 폰을 눕히면 판이 버튼과 겹쳐 풀 수 없어서, 세로로 돌려 달라고 안내해요(웹은 화면 회전을 잠글 수 없어요) */
+.rot{display:none}
+@media (orientation:landscape) and (max-height:500px){
+  .rot{display:flex;position:fixed;inset:0;z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--grass);font-size:22px;color:#fff;-webkit-text-stroke:5px var(--grass-s);paint-order:stroke fill;text-align:center}
+  .rot img{width:120px}
+}
 </style>
 </head>
 <body>
 
+<div class="rot" aria-live="polite"><img src="assets/cat-oops.webp" alt="">휴대폰을 세로로 돌려 주세요</div>
 <main id="onb" hidden></main>
 
 <main id="map" hidden>
@@ -573,7 +623,7 @@ svg{display:block}
     let side = nx && nx.x > t.x ? 'l' : 'r';
     if (side === 'r' && t.x + 120 > L.W - 76) side = 'l';
     if (side === 'l' && t.x - 120 < 0) side = 'r';
-    h += `<div class="hero${opt.drop ? ' drop' : ''}" id="hero" style="left:${s0.x}px;top:${s0.y - 6}px;z-index:39000"><span class="pin ${side}">${sectionDone ? '완성!' : store.cur[tid] ? '이어서!' : '콕콕!'}</span><img src="${IMG('cat-' + (fk >= 0 || sectionDone ? 'happy' : 'idle'))}" alt="콕이"></div>`;
+    h += `<button class="hero${opt.drop ? ' drop' : ''}" id="hero" aria-label="콕이: 지금 단계 열기" style="left:${s0.x}px;top:${s0.y - 6}px;z-index:39000"><span class="pin ${side}">${sectionDone ? '완성!' : store.cur[tid] ? '이어서!' : '콕콕!'}</span><img src="${IMG('cat-' + (fk >= 0 || sectionDone ? 'happy' : 'idle'))}" alt=""></button>`;
     const world = $('world');
     world.style.height = L.H + 'px';
     world.innerHTML = h;
@@ -950,7 +1000,7 @@ svg{display:block}
   grid.addEventListener('contextmenu', (e) => e.preventDefault());
 
   /* ---------- 결과 ---------- */
-  function openSheet(html) { document.querySelectorAll('.toast').forEach((t) => t.remove()); $('sheet').innerHTML = html; $('overlay').hidden = false; }
+  function openSheet(html) { document.querySelectorAll('.toast').forEach((t) => t.remove()); $('sheet').innerHTML = html; $('overlay').hidden = false; $('overlay').scrollTop = 0; }
   function closeSheet() { $('overlay').hidden = true; $('sheet').innerHTML = ''; }
   function confetti() {
     const cols = ['#FFD23A', '#FF9E3B', '#6CC63A', '#47D1DE', '#FF5184', '#FF5943'];
@@ -1038,6 +1088,11 @@ svg{display:block}
   $('back').onclick = goBack;
 
   /* ---------- 누르기 ---------- */
+  // 아이폰 사파리는 버튼이 아닌 곳(빈 풀밭, 시트 바깥 어두운 배경)을 손가락으로 눌러도 click 을 만들지 않아요.
+  // 화면 뿌리마다 빈 click 리스너를 달아 두면 그 안 어디를 눌러도 click 이 생겨 아래 document 처리로 올라와요.
+  ['onb', 'map', 'gal', 'game', 'overlay'].forEach((id) => $(id).addEventListener('click', () => {}));
+  // 아이폰 사파리는 viewport 의 user-scalable=no 를 무시해서, 두 손가락 확대는 gesture 이벤트로 따로 막아요.
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
   document.addEventListener('click', (e) => {
     const tg = e.target;
     if (tg.closest('#grid') || tg.closest('.controls') || tg.closest('#back')) return;
