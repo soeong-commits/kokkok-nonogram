@@ -299,7 +299,7 @@ svg{display:block}
 .readout .ro{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:var(--rf,19px);line-height:1.1}
 .readout .ro em{flex:none;min-width:46px;font-style:normal;font-family:var(--kr);font-weight:400;font-size:13px;color:var(--sub)}
 .readout .ro b.d{opacity:.28}
-.aimo{position:absolute;pointer-events:none;z-index:4;display:none}
+.aimo{position:absolute;pointer-events:none;z-index:4;display:none;font-style:normal}   /* <i> 요소라 기울임을 꺼요 */
 .wrap.aiming .aimo{display:block}
 .wrap.aiming .aimo.ln{display:none}
 .wrap.aiming.line .aimo.ln{display:block}
@@ -309,9 +309,20 @@ svg{display:block}
 .aimo.ring{width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid #FF7A1A;box-shadow:0 0 0 2px #fff,inset 0 0 0 2px #fff;transition:transform .12s}
 .aimo.ring.charge{animation:aimch .48s linear forwards}
 .aimo.ring.lock{transform:scale(.72);background:rgba(255,122,26,.25)}
+/* 골라 둔 칸(떼고 나서 톡을 기다림): 동그라미가 숨 쉬듯 번져요. 방금 칠했으면 칸 색이 보이게 점을 빼요 */
+.aimo.ring.sel{animation:aimsel 1s ease-in-out infinite}
+@keyframes aimsel{50%{box-shadow:0 0 0 2px #fff,inset 0 0 0 2px #fff,0 0 0 8px rgba(255,122,26,.3)}}
+.wrap.aiming.done .aimo.dot{display:none}
 @keyframes aimch{from{transform:scale(1)}to{transform:scale(.8)}}
-.aimo.num{margin:-46px 0 0;transform:translateX(-50%);padding:3px 9px 2px;border-radius:99px;background:#FF7A1A;color:#fff;font-family:var(--num);font-weight:900;font-size:14px;white-space:nowrap;box-shadow:0 0 0 2px #fff}
+.aimo.num{margin:-46px 0 0;transform:translateX(-50%);padding:3px 9px 2px;border-radius:99px;background:#FF7A1A;color:#fff;font-family:var(--kr);font-weight:400;font-size:14px;white-space:nowrap;box-shadow:0 0 0 2px #fff}
+.aimo.num b{font-family:var(--num);font-weight:900}   /* 숫자만 Nunito 굵게, 한글은 Jua 그대로(Jua 굵기를 흉내 내면 글자가 기울어 보여요) */
 .wrap.aiming .aimo.num:empty{display:none}
+.wrap.pvl .aimo.num{display:block}
+/* 손가락 미리보기(뗄 때 칠해질 칸): 채우기는 옅은 주황, X 표시는 옅은 X — 칸 테두리는 쓰지 않아요 */
+.cell.pv{background:rgba(255,158,59,.45)}
+.cell.pv.pvx{background:rgba(217,174,122,.28)}
+.cell.pvx:not(.x):not(.f)::after{content:"";position:absolute;inset:27%;opacity:.6;
+  background:linear-gradient(45deg,transparent 40%,var(--x) 40%,var(--x) 60%,transparent 60%),linear-gradient(-45deg,transparent 40%,var(--x) 40%,var(--x) 60%,transparent 60%)}
 #game.tight .status .masc{width:44px;height:44px}
 #game.tight .bubble{font-size:14px;line-height:1.25;padding:6px 10px 5px}
 #game.tight .hearts img{width:26px;height:26px}
@@ -905,7 +916,7 @@ svg{display:block}
   }
 
   /* ---------- 게임 ---------- */
-  let G = null, els = [], rcEls = [], ccEls = [], hl = null, drag = null, timer = null, sayT = null, edgeC = null;
+  let G = null, els = [], rcEls = [], ccEls = [], hl = null, drag = null, aim = null, timer = null, sayT = null, edgeC = null;
 
   // 콕이가 말풍선으로 한마디 해요. hold가 없으면 잠시 뒤 평소 표정으로 돌아와요.
   function say(text, mood, hold) {
@@ -933,7 +944,7 @@ svg{display:block}
     show('game');
     $('gtitle').textContent = p.label;
     buildBoard();
-    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : coarse && aimOn() ? '손가락 위 동그라미로 칸을 맞추고 떼면 칠한다냥' : G.canZoom ? '끌어서 칠하고, 두 손가락을 벌리면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
+    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : coarse && aimOn() ? '동그라미로 칸을 고르고, 한 번 더 톡 하면 칠한다냥' : G.canZoom ? '끌어서 칠하고, 두 손가락을 벌리면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
     if (!s) for (let i = 0; i < n; i++) { crossIfDone('r', i, true); crossIfDone('c', i, true); }
     for (let i = 0; i < n * n; i++) paint(i);
     for (let i = 0; i < n; i++) { markClues('r', i); markClues('c', i); }
@@ -1006,6 +1017,7 @@ svg{display:block}
   // 칸 크기만 바꿔요(칸을 다시 만들지 않아서 55×55도 가볍게 확대·축소돼요). G.zc: 확대 칸 크기, 0이면 맞춤.
   function zoomed() { return !!(G && G.canZoom && G.zc > 0 && !G.won); }
   function applySize() {
+    if (aim) aimClear();   // 칸 크기·자리가 바뀌면 골라 둔 조준점은 지워요
     const board = $('board'), wrap = board.parentElement, st = $('stage'), gm = $('game');
     let f = fitSize();
     // 20칸 넘는 판이 세로 자리 때문에 작아지는 폰(아이폰 SE 등)에서는 말풍선·버튼을 줄여 판 자리를 넓혀요(한 판 안에서는 다시 넓히지 않아요).
@@ -1045,7 +1057,7 @@ svg{display:block}
     edgeC = null;
     fitClueSpans();
     // 확대하거나 줄일 때마다 콕이 말풍선을 지금 상태에 맞게 바꿔요.
-    if (G.wasOn !== undefined && G.wasOn !== on && !G.won) say(on ? '확대 중엔 끌면 이동, 꾹 누르고 끌면 칠하기다냥' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : coarse && G.cell < 16 ? '전체 판이다냥. 동그라미를 맞추고 떼면 칠해요' : '전체 판이다냥. 끌면 한 줄을 칠해요');
+    if (G.wasOn !== undefined && G.wasOn !== on && !G.won) say(on ? '확대 중엔 끌면 이동, 꾹 누르고 끌면 칠하기다냥' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : coarse && G.cell < 16 ? '전체 판이다냥. 동그라미로 고르고 톡 하면 칠해요' : '전체 판이다냥. 끌면 한 줄을 칠해요');
     G.wasOn = on;
     $('ovhint').hidden = !G.overview;
     $('zoom').hidden = !G.canZoom;
@@ -1308,26 +1320,42 @@ svg{display:block}
     return { r: lineAt(E.ys, y), c: lineAt(E.xs, x) };
   }
   /* ---------- 조준점(큰 판 확대 전, 손가락) ----------
-     레퍼런스: 큰 판을 작은 폰에서 푸는 노노그램 앱들(Pic-a-Pix의 손끝 커서, Nonograms Katana의 정밀 커서)은
-     손가락 바로 밑이 아니라 손가락 위에 뜨는 커서로 칸을 고르고, 지금 줄의 숫자를 크게 보여 줘요.
-     · 판에 손가락을 대면 손끝보다 위 칸에 조준점이 떠요. 끌어서 맞추고 떼면 그 칸을 칠해요(손끝에 가려 엉뚱한 칸을 칠하지 않게).
-     · 조준점을 한 칸에 0.48초 멈추면 그 칸이 시작점으로 고정돼요(톡 진동). 그대로 끌면 한 줄이 미리 보이고, 떼면 그 줄을 칠해요.
-     · 조준점을 판 밖으로 빼고 떼면 아무것도 칠하지 않아요. 두 번째 손가락이 닿아도 취소되고 확대로 넘어가요.
+     레퍼런스: 손가락보다 위에 커서를 띄워 손끝 가림을 없애는 'take-off' 방식(Potter 외, 1988)은 손을 떼는 순간 손끝이 구르며
+     커서가 옆 칸으로 밀리기 쉬워요. Sears(1991)는 커서 흔들림만 잡아 줘도 작은 목표 오류가 크게 준다고 했고,
+     Benko 외(Microsoft, 2006)는 몇 px짜리 목표는 떼는 순간 고르는 것만으로는 모자라 따로 누르는 동작으로 확정하게 했어요.
+     큰 판 칸은 9px 안팎이라 '고르기 → 톡 해서 칠하기' 두 단계로 받아요(사용자 11/26 "뗄 때 옆 칸, 숫자만 보려다 칠해짐").
+     · 판에 손가락을 대면 손끝보다 위 칸에 조준점이 떠요. 끌어서 맞추고 떼면 그 칸이 골라진 채 남아요. 아직 칠하지 않아요.
+     · 고른 자리(손을 뗀 곳이나 동그라미)를 한 번 톡 하면 그 칸을 칠해요. 거기서 끌면 조준점이 지금 칸에서부터 손가락을 따라와요.
+     · 먼 곳에 손가락을 대면 그곳을 새로 겨눠요. 조준점을 판 밖으로 빼고 떼면 고른 게 없어져요.
+     · 조준점을 한 칸에 0.48초 멈추면 시작점이 고정돼요(톡 진동). 끌면 한 줄이 미리 보이고, 떼고 톡 하면 그 줄을 칠해요.
+     · 칸 경계에서는 칸의 30%만큼 더 넘어가야 옆 칸으로 바뀌고, 떼기 직전 0.09초 안에 바뀐 칸은 되돌려요(손끝 구름).
      · 위쪽 말풍선 자리에는 조준한 가로·세로 줄의 숫자를 크게 보여 줘요. */
-  const AIM_UP = 46, AIM_HOLD = 480, coarse = window.matchMedia ? matchMedia('(pointer: coarse)').matches : true;
-  let aim = null;
+  const AIM_UP = 46, AIM_HOLD = 480, AIM_TAP = 400, AIM_NEAR = 32, AIM_LIFT = 90, coarse = window.matchMedia ? matchMedia('(pointer: coarse)').matches : true;
   const aimEl = (k) => boardWrapEl().querySelector('.aimo.' + k);
   function boardWrapEl() { return $('board').parentElement; }
   function aimOn() { return !!(G && !G.won && !G.over && !zoomed() && !G.overview && G.cell < 16); }
-  function aimTarget(x, y) {
-    const R = edgesNow().rect, m = Math.max(12, G.cell * 1.5);
+  function aimPoint(x, y) {   // 손가락 자리 → 겨누는 자리
+    const R = edgesNow().rect;
     // 판 밑 여백이 46px보다 좁으면(맨 아랫줄을 겨누려면 손가락이 판 자리 밖으로 나가야 해서) 손가락 위치를 판 높이에 고르게 펴서
     // 판 자리 맨 아래를 누르면 맨 아랫줄이 겨눠지게 해요(위로 갈수록 46px 위, 아래로 갈수록 조금 덜 위).
     const stB = $('stage').getBoundingClientRect().bottom - 6, y0 = R.top + AIM_UP;
     let ty = y - AIM_UP;
     if (stB - R.bottom < AIM_UP && y > y0) ty = R.top + (y - y0) * ((R.bottom - R.top) / Math.max(1, stB - y0));
-    if (x < R.left - m || x > R.right + m || ty < R.top - m || ty > R.bottom + m) return null;
-    return cellAt({ clientX: x, clientY: ty }, true);
+    return { x, y: ty };
+  }
+  function cellRect(p) {
+    const E = edgesNow();
+    return { l: E.xs[p.c], r: p.c + 1 < G.n ? E.xs[p.c + 1] : E.rect.right, t: E.ys[p.r], b: p.r + 1 < G.n ? E.ys[p.r + 1] : E.rect.bottom };
+  }
+  function cellMid(p) { const b = cellRect(p); return { x: (b.l + b.r) / 2, y: (b.t + b.b) / 2 }; }
+  function aimCell(pt, cur) {
+    const R = edgesNow().rect, m = Math.max(12, G.cell * 1.5);
+    if (pt.x < R.left - m || pt.x > R.right + m || pt.y < R.top - m || pt.y > R.bottom + m) return null;
+    if (cur) {   // 칸 경계 흔들림 막기: 지금 칸을 칸의 30%(2px 이상)만큼 더 넘어가야 옆 칸으로 바꿔요.
+      const b = cellRect(cur), h = Math.max(2, G.cell * 0.3);
+      if (pt.x >= b.l - h && pt.x < b.r + h && pt.y >= b.t - h && pt.y < b.b + h) return cur;
+    }
+    return cellAt({ clientX: pt.x, clientY: pt.y }, true);
   }
   function aimSpan(a) {   // 시작점에서 지금 조준점까지 더 많이 움직인 쪽으로 곧은 줄
     const p = a.pos, st = a.anchor;
@@ -1340,13 +1368,20 @@ svg{display:block}
     return { l: b.left - wr.left - boardWrapEl().clientLeft, t: b.top - wr.top - boardWrapEl().clientTop, w: el.clientWidth * (b.width / el.offsetWidth), h: el.clientHeight * (b.height / el.offsetHeight) };
   }
   function place(el, l, t, w, h) { el.style.left = l + 'px'; el.style.top = t + 'px'; if (w != null) { el.style.width = w + 'px'; el.style.height = h + 'px'; } }
+  // 칸 위 알약('n칸', '한 번 더 톡')은 틀 밖으로 잘리지 않게 좌우를 안쪽으로 당겨요(확대 중엔 스크롤만큼 더해요).
+  function placeNum(num, cb, w) {
+    const sl = w.scrollLeft, st = w.scrollTop, hw = num.offsetWidth / 2;
+    place(num, Math.max(sl + hw + 2, Math.min(sl + w.clientWidth - hw - 2, cb.l + cb.w / 2 + sl)), cb.t + st);
+  }
   function clueRow(kind, k) {
     const strip = (kind === 'r' ? rcEls : ccEls)[k];
     return [...strip.children].map((sp) => `<b${sp.classList.contains('d') ? ' class="d"' : ''}>${sp.textContent}</b>`).join('');
   }
+  // aim: down=손가락이 닿아 있음, pos=조준한 칸, anchor=줄 시작점, up=손을 뗀 자리, done=방금 칠함(말풍선을 다시 보여 줘요)
   function aimDraw() {
     const w = boardWrapEl(), a = aim, p = a && a.pos;
     w.classList.toggle('aiming', !!p);
+    w.classList.toggle('done', !!(p && a.done));
     const L = a && aimSpan(a);
     w.classList.toggle('line', !!(L && p));
     highlight(p || null);
@@ -1360,16 +1395,18 @@ svg{display:block}
     const ring = aimEl('ring');
     place(ring, cb.l + cb.w / 2, cb.t + cb.h / 2);
     ring.classList.toggle('lock', !!a.anchor);
-    if (!a.anchor && a.fresh) { ring.classList.remove('charge'); void ring.offsetWidth; ring.classList.add('charge'); a.fresh = false; }
-    if (a.anchor) ring.classList.remove('charge');
-    const num = aimEl('num');
+    ring.classList.toggle('sel', !a.down && !a.done);
+    if (a.down && !a.anchor && a.fresh) { ring.classList.remove('charge'); void ring.offsetWidth; ring.classList.add('charge'); a.fresh = false; }
+    if (!a.down || a.anchor) ring.classList.remove('charge');
     if (L) {
       const s0 = cellBox(L.st.r, L.st.c, wr), s1 = cellBox(L.end.r, L.end.c, wr);
       const l = Math.min(s0.l, s1.l), t = Math.min(s0.t, s1.t);
       place(aimEl('ln'), l, t, Math.max(s0.l + s0.w, s1.l + s1.w) - l, Math.max(s0.t + s0.h, s1.t + s1.h) - t);
-      num.textContent = L.len + '칸';
-    } else num.textContent = '';
-    place(num, cb.l + cb.w / 2, cb.t);
+    }
+    const num = aimEl('num');
+    num.innerHTML = a.done ? '' : a.down ? (L ? `<b>${L.len}</b>칸` : '') : L ? `<b>${L.len}</b>칸 · 한 번 더 톡` : '한 번 더 톡';
+    if (num.textContent) placeNum(num, cb, w);
+    if (a.done) { ro.hidden = true; stt.classList.remove('aiming'); return; }
     // 조준한 줄의 숫자를 말풍선 자리에 크게
     const bb = $('bubble');
     ro.style.left = bb.offsetLeft + 'px'; ro.style.top = bb.offsetTop + 'px'; ro.style.width = bb.offsetWidth + 'px'; ro.style.height = bb.offsetHeight + 'px';
@@ -1379,76 +1416,133 @@ svg{display:block}
     ro.style.setProperty('--rf', f + 'px');
     while (f > 11 && [...ro.children].some((d) => d.scrollWidth > ro.clientWidth - 22)) { f--; ro.style.setProperty('--rf', f + 'px'); }
   }
+  function aimClear() { if (aim) clearTimeout(aim.t); aim = null; if (G && els.length) aimDraw(); }
+  function aimArm(a) { clearTimeout(a.t); a.t = setTimeout(() => { if (aim === a && a.down && a.pos && !a.anchor) { a.anchor = a.pos; buzz(14); aimDraw(); } }, AIM_HOLD); }
+  function aimNear(x, y) {   // 고른 칸이 있고, 손을 뗀 자리나 동그라미 가까이에 닿았는지
+    const a = aim;
+    if (!a || a.down || !a.pos) return false;
+    const m = cellMid(a.pos);
+    return (a.up && Math.hypot(x - a.up.x, y - a.up.y) <= AIM_NEAR) || Math.hypot(x - m.x, y - m.y) <= Math.max(22, G.cell * 1.5);
+  }
   function aimStart(e) {
-    aim = { id: e.pointerId, pos: null, anchor: null, t: 0, fresh: true };
-    aimMove(e.clientX, e.clientY);
+    const x = e.clientX, y = e.clientY, now = performance.now();
+    if (aimNear(x, y)) {   // 고른 자리에 다시 닿음: 톡이면 칠하고, 끌면 지금 칸에서부터 따라와요(손가락 자리로 튀지 않게)
+      const a = aim;
+      Object.assign(a, { id: e.pointerId, down: true, rel: true, base: { x, y }, origin: cellMid(a.pos), at: now, moved: false, done: false, prev: null, chAt: 0, fresh: true });
+      if (!a.anchor) aimArm(a);
+      aimDraw();
+      return;
+    }
+    if (aim) clearTimeout(aim.t);
+    aim = { id: e.pointerId, down: true, rel: false, pos: null, anchor: null, t: 0, fresh: true, at: now, moved: false, done: false, prev: null, chAt: 0, up: null };
+    aimMove(x, y);
   }
   function aimMove(x, y) {
-    const p = aimTarget(x, y), a = aim;
-    if (p && a.pos && p.r === a.pos.r && p.c === a.pos.c) return;
-    a.pos = p;
-    if (!a.anchor) {
-      clearTimeout(a.t); a.fresh = true;
-      if (p) a.t = setTimeout(() => { if (aim === a && a.pos) { a.anchor = a.pos; buzz(14); aimDraw(); } }, AIM_HOLD);
+    const a = aim;
+    if (a.rel && !a.moved) {
+      if (Math.hypot(x - a.base.x, y - a.base.y) < 8) return;   // 톡 하려다 살짝 밀린 건 움직임으로 치지 않아요
+      a.moved = true; a.base = { x, y };   // 여기서부터 따라가요(멈춰 있던 8px만큼 튀지 않게)
     }
+    a.moved = true;
+    const pt = a.rel ? { x: a.origin.x + x - a.base.x, y: a.origin.y + y - a.base.y } : aimPoint(x, y);
+    const p = aimCell(pt, a.pos);
+    if (p === a.pos || (p && a.pos && p.r === a.pos.r && p.c === a.pos.c)) return;
+    a.prev = a.pos; a.chAt = performance.now(); a.pos = p;
+    if (!a.anchor) { clearTimeout(a.t); a.fresh = true; if (p) aimArm(a); }
     aimDraw();
   }
-  function aimEnd(ok) {
-    const a = aim; aim = null;
-    if (!a) return;
-    clearTimeout(a.t);
+  function aimEnd(ok, x, y) {
+    const a = aim;
+    if (!a || !a.down) return;
+    clearTimeout(a.t); a.down = false;
+    if (!ok || !G || G.won || G.over) { aimClear(); return; }
+    const now = performance.now();
+    if (a.rel && !a.moved && now - a.at < AIM_TAP) { aimFire(a); return; }   // 고른 자리를 톡: 칠하기
+    if (a.prev && now - a.chAt < AIM_LIFT) a.pos = a.prev;   // 떼면서 손끝이 굴러 바뀐 칸은 되돌려요
+    if (!a.pos) { aimClear(); return; }   // 판 밖에서 떼면 고른 게 없어져요
+    a.up = { x, y };
+    aimDraw();
+  }
+  function aimFire(a) {
     const L = aimSpan(a), p = a.pos;
-    a.pos = null; aim = a; aimDraw(); aim = null;
-    if (!ok || !p || !G || G.won || G.over) return;
-    touchSnap = null;
-    if (!L) { act(p.r * G.n + p.c, G.mode); persist(); return; }
-    let cur = L.st;
-    for (;;) {
-      if (act(cur.r * G.n + cur.c, G.mode) === 'miss' || G.won || G.over) break;
-      if (cur.r === L.end.r && cur.c === L.end.c) break;
-      cur = { r: cur.r + Math.sign(L.end.r - cur.r), c: cur.c + Math.sign(L.end.c - cur.c) };
+    if (!L) act(p.r * G.n + p.c, G.mode);
+    else {
+      let cur = L.st;
+      for (;;) {
+        if (act(cur.r * G.n + cur.c, G.mode) === 'miss' || G.won || G.over) break;
+        if (cur.r === L.end.r && cur.c === L.end.c) break;
+        cur = { r: cur.r + Math.sign(L.end.r - cur.r), c: cur.c + Math.sign(L.end.c - cur.c) };
+      }
+      a.pos = L.end;
     }
     persist();
+    if (aim !== a) return;
+    if (!G || G.won || G.over) { aimClear(); return; }
+    a.anchor = null; a.done = true;
+    aimDraw();
   }
   function highlight(pos) {
     if (hl) { rcEls[hl.r].classList.remove('hl'); ccEls[hl.c].classList.remove('hl'); }
     hl = pos;
     if (hl) { rcEls[hl.r].classList.add('hl'); ccEls[hl.c].classList.add('hl'); }
   }
-  // 손가락 규칙(칠하기와 판 옮기기가 섞이지 않게)
-  // · 확대 중 한 손가락: 끌면 판 옮기기(놓으면 미끄러지듯 멈춰요), 톡 누르면 한 칸, 꾹(0.24초) 누른 채 끌면 줄 칠하기.
-  // · 전체 보기(확대 전)·작은 판: 끌면 바로 줄 칠하기. 큰 판은 첫 탭을 0.11초 기다려 두 손가락 확대와 구분해요.
-  // · 어디서든 두 손가락: 옮기기·벌려 확대·오므려 전체 보기. 마우스는 늘 바로 칠해요.
-  const HOLD = 240, SLOP = 9, canHover = !window.matchMedia || matchMedia('(hover: hover)').matches;
+  // 손가락 규칙(조준점을 안 쓰는 판): 닿기만 해서는 칠하지 않고, 손을 뗄 때 칠해요(사용자 11/26 "닿기만 해도 칠해짐").
+  // · 작은 판·확대 전: 손가락을 대면 그 칸이, 끌면 한 줄이 옅게 미리 보이고 떼면 칠해요. 판 밖으로 빼고 떼면 취소,
+  //   0.11초도 안 돼 두 칸 넘게 스친 건 실수로 보고 칠하지 않아요.
+  // · 확대 중 한 손가락: 끌면 판 옮기기(놓으면 미끄러지듯 멈춰요), 톡(뗄 때) 한 칸, 꾹(0.24초) 누른 채 끌면 줄이 미리 보이고 떼면 칠해요.
+  // · 어디서든 두 손가락: 옮기기·벌려 확대·오므려 전체 보기(칠하려던 미리보기는 취소돼요). 마우스는 늘 바로 칠해요.
+  const HOLD = 240, SLOP = 9, SWIPE = 110, canHover = !window.matchMedia || matchMedia('(hover: hover)').matches;
   const pts = new Map();
   let pend = null, pan = null, lastPt = null, raf = 0, overT = 0;
-  // 두 손가락을 동시에 대지 못해도 괜찮게: 첫 손가락이 닿은 뒤 0.35초 안에 두 번째 손가락이 오면
-  // 첫 손가락이 칠한 칸·깎인 하트·실수 수를 통째로 되돌리고 확대·이동으로 받아요.
-  let touchSnap = null;
-  function undoTouch() {
-    const t = touchSnap; touchSnap = null;
-    if (!t || !G || G.won || performance.now() - t.at > 350) return;
-    if (t.cells.every((v, i) => v === G.cells[i])) return;
-    clearTimeout(overT);
-    G.cells = t.cells; G.lives = t.lives; G.miss = t.miss; G.over = false;
-    for (let i = 0; i < G.n * G.n; i++) paint(i);
-    for (let i = 0; i < G.n; i++) { markClues('r', i); markClues('c', i); }
-    renderStatus(); persist();
-  }
   const wrapEl = () => $('board').parentElement;
-  function begin(pos) {
-    drag = { start: pos, last: pos, axis: null, alive: true };
+  function dragCells(d) {
+    const out = [];
+    let cur = d.start;
+    for (;;) {
+      out.push(cur.r * G.n + cur.c);
+      if (cur.r === d.last.r && cur.c === d.last.c) return out;
+      cur = { r: cur.r + Math.sign(d.last.r - cur.r), c: cur.c + Math.sign(d.last.c - cur.c) };
+    }
+  }
+  // 미리보기: 칠할 칸은 옅은 주황, X 표시면 옅은 X. 두 칸이 넘으면 끝 칸 위에 'n칸'.
+  function pvDraw() {
+    const d = drag, w = wrapEl(), num = aimEl('num');
+    if (d.pv) d.pv.forEach((i) => paint(i));
+    d.pv = dragCells(d);
+    const ex = G.mode === 'fill' ? ' pv' : ' pv pvx';
+    d.pv.forEach((i) => paint(i, ex));
+    highlight(d.last);
+    w.classList.toggle('pvl', d.pv.length > 1);
+    if (d.pv.length > 1) { num.innerHTML = `<b>${d.pv.length}</b>칸`; placeNum(num, cellBox(d.last.r, d.last.c, w.getBoundingClientRect()), w); }
+  }
+  function pvClear(d) { if (d && d.pv) { d.pv.forEach((i) => paint(i)); d.pv = null; } wrapEl().classList.remove('pvl'); }
+  function preview(pos, id) { drag = { start: pos, last: pos, axis: null, alive: true, live: false, id, at: performance.now(), pv: null }; pvDraw(); }
+  function cancelDrag() { const d = drag; drag = null; if (d && !d.live) pvClear(d); highlight(null); }
+  function commitDrag() {
+    const d = drag; drag = null;
+    pvClear(d);
+    if (!d || !G || G.won || G.over) return;
+    for (const i of dragCells(d)) if (act(i, G.mode) === 'miss' || G.won || G.over) break;
+    persist();
+    if (G && !G.won) highlight(null);
+  }
+  function inBoard(e) {   // 판 칸 둘레(칸 하나, 16px 이상) 안에서 뗐는지. 확대 중엔 보이는 틀 안이어야 해요.
+    const R = edgesNow().rect, m = Math.max(16, G.cell), x = e.clientX, y = e.clientY;
+    if (x < R.left - m || x > R.right + m || y < R.top - m || y > R.bottom + m) return false;
+    if (zoomed()) { const b = wrapEl().getBoundingClientRect(); if (x < b.left || x > b.right || y < b.top || y > b.bottom) return false; }
+    return true;
+  }
+  function begin(pos) {   // 마우스: 누르자마자 칠해요
+    drag = { start: pos, last: pos, axis: null, alive: true, live: true };
     highlight(pos);
     if (act(pos.r * G.n + pos.c, G.mode) === 'miss') drag.alive = false;
     persist();
   }
-  function commit(held) {
-    if (!pend) return;
-    const p = pend; pend = null; clearTimeout(p.t);
-    if (!G || G.won || G.over) return;
-    touchSnap = G.canZoom ? { at: performance.now(), cells: G.cells.slice(), lives: G.lives, miss: G.miss } : null;
-    if (held === true) buzz(12);
-    begin(p.pos);
+  function holdLine() {   // 확대 중 꾹 눌렀어요: 여기서부터 줄 미리보기
+    const p = pend; pend = null;
+    if (!p || !G || G.won || G.over) return;
+    buzz(12);
+    preview(p.pos, p.id); drag.at = 0;
   }
   // 한 손가락 판 옮기기와, 놓을 때 남은 속도로 미끄러지기
   let fling = 0;
@@ -1477,7 +1571,7 @@ svg{display:block}
     stopFling(); fling = requestAnimationFrame(step);
   }
   function twoMid() { const a = [...pts.values()]; return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) }; }
-  function startPan() { const m = twoMid(), w = wrapEl(); pan = { ...m, cell0: G.cell, focus: gridFrac(m), zooming: false }; }
+  function startPan() { const m = twoMid(); pan = { ...m, cell0: G.cell, focus: gridFrac(m), zooming: false }; }
   let panRaf = 0;
   function movePan() {
     if (panRaf) return;
@@ -1497,12 +1591,15 @@ svg{display:block}
   }
   function extendDrag(pt) {
     const pos = cellAt(pt, true);
+    // 미리보기는 시작 칸으로 돌아오면 방향을 다시 골라요(마우스로 바로 칠할 땐 처음 정한 방향 그대로).
+    if (!drag.live && pos.r === drag.start.r && pos.c === drag.start.c) drag.axis = null;
     if (!drag.axis) {
       const dr = pos.r - drag.start.r, dc = pos.c - drag.start.c;
-      if (!dr && !dc) return;
+      if (!dr && !dc) { if (!drag.live && (drag.last.r !== drag.start.r || drag.last.c !== drag.start.c)) { drag.last = drag.start; pvDraw(); } return; }
       drag.axis = Math.abs(dr) >= Math.abs(dc) ? 'v' : 'h';
     }
     const target = drag.axis === 'h' ? { r: drag.start.r, c: pos.c } : { r: pos.r, c: drag.start.c };
+    if (!drag.live) { if (target.r !== drag.last.r || target.c !== drag.last.c) { drag.last = target; pvDraw(); } return; }
     while (drag.alive && (drag.last.r !== target.r || drag.last.c !== target.c)) {
       drag.last = { r: drag.last.r + Math.sign(target.r - drag.last.r), c: drag.last.c + Math.sign(target.c - drag.last.c) };
       if (act(drag.last.r * G.n + drag.last.c, G.mode) === 'miss') drag.alive = false;
@@ -1543,24 +1640,24 @@ svg{display:block}
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { stageEl.setPointerCapture(e.pointerId); } catch (err) {}
     e.preventDefault();
-    if (pts.size >= 2) {
+    if (pts.size >= 2) {   // 두 번째 손가락: 칠하려던 건 모두 취소하고 확대·이동으로 받아요
       pan1 = null; ovTap = null;
-      if (aim) aimEnd(false);
-      if (pend) { clearTimeout(pend.t); pend = null; highlight(null); }
-      if (drag) { drag = null; highlight(null); }
-      undoTouch();
+      if (aim) aimClear();
+      if (pend) { clearTimeout(pend.t); pend = null; }
+      if (drag) cancelDrag();
+      highlight(null);
       if (pts.size === 2) startPan();
       return;
     }
     if (G.overview) { ovTap = { id: e.pointerId, x: e.clientX, y: e.clientY }; return; }
     const touch = e.pointerType !== 'mouse';
-    if (touch && aimOn()) { touchSnap = null; aimStart(e); return; }
+    if (touch && aimOn()) { aimStart(e); return; }
+    if (aim) aimClear();
     const pos = grid.contains(e.target) ? cellAt(e) : null;
-    touchSnap = null;
     if (!pos) { if (zoomed()) pan1 = panStart(e.clientX, e.clientY); return; }
-    if (touch && zoomed()) { pend = { pos, id: e.pointerId, x: e.clientX, y: e.clientY, hold: true, t: setTimeout(() => commit(true), HOLD) }; return; }
-    if (touch && G.canZoom) { pend = { pos, id: e.pointerId, x: e.clientX, y: e.clientY, t: setTimeout(commit, 110) }; highlight(pos); return; }
-    begin(pos);
+    if (!touch) { begin(pos); return; }
+    if (zoomed()) { pend = { pos, id: e.pointerId, x: e.clientX, y: e.clientY, t: setTimeout(holdLine, HOLD) }; return; }
+    preview(pos, e.pointerId);
   });
   stageEl.addEventListener('pointermove', (e) => {
     if (!G) return;
@@ -1568,13 +1665,13 @@ svg{display:block}
     if (pan) { if (pts.size >= 2) movePan(); return; }
     if (ovTap && e.pointerId === ovTap.id && Math.hypot(e.clientX - ovTap.x, e.clientY - ovTap.y) > 10) ovTap = null;
     if (pan1) { panMove(e); return; }
-    if (aim) { if (e.pointerId === aim.id) aimMove(e.clientX, e.clientY); return; }
-    if (pend && e.pointerId === pend.id && Math.hypot(e.clientX - pend.x, e.clientY - pend.y) > (pend.hold ? SLOP : 6)) {
+    if (aim && aim.down) { if (e.pointerId === aim.id) aimMove(e.clientX, e.clientY); return; }
+    if (pend && e.pointerId === pend.id && Math.hypot(e.clientX - pend.x, e.clientY - pend.y) > SLOP) {
       // 확대 중 꾹 누르기 전에 움직이면 칠하지 않고 판을 옮겨요(손가락이 처음 닿은 곳부터 이어서).
-      if (pend.hold) { const p = pend; clearTimeout(p.t); pend = null; pan1 = panStart(p.x, p.y); panMove(e); return; }
-      commit();
+      const p = pend; clearTimeout(p.t); pend = null; pan1 = panStart(p.x, p.y); panMove(e); return;
     }
     if (!drag) { if (e.pointerType === 'mouse' && canHover) highlight(cellAt(e)); return; }   // 휴대폰이 탭 뒤에 흉내 내는 마우스 움직임으로 줄이 켜진 채 남지 않게
+    if (!drag.live && e.pointerId !== drag.id) return;
     if (!drag.alive || G.won || G.over) return;
     lastPt = { clientX: e.clientX, clientY: e.clientY };
     extendDrag(lastPt);
@@ -1582,13 +1679,23 @@ svg{display:block}
   });
   function endDrag(e) {
     pts.delete(e.pointerId);
-    if (aim && e.pointerId === aim.id) { aimEnd(e.type === 'pointerup'); return; }
+    if (aim && aim.down && e.pointerId === aim.id) { aimEnd(e.type === 'pointerup', e.clientX, e.clientY); return; }
     if (ovTap && e.pointerId === ovTap.id) { const t = ovTap; ovTap = null; if (e.type === 'pointerup' && G && G.overview && !pan) zoomAt({ x: t.x, y: t.y }); return; }
     if (pan) { if (!pts.size) { if (pan.zooming) { store.zc = zoomed() ? G.zc : 0; save(); } pan = null; } return; }
     if (pan1) { if (!pts.size) panEnd(); return; }
-    if (pend && e.pointerId === pend.id) { if (e.type === 'pointerup') commit(); else { clearTimeout(pend.t); pend = null; } }
+    if (pend && e.pointerId === pend.id) {   // 확대 중 톡: 뗄 때 한 칸
+      const p = pend; clearTimeout(p.t); pend = null;
+      if (e.type === 'pointerup' && G && !G.won && !G.over) { drag = { start: p.pos, last: p.pos, live: false }; commitDrag(); }
+      return;
+    }
     lastPt = null;
-    if (!drag) { if (e.pointerType !== 'mouse' && !pend) highlight(null); return; }
+    if (!drag) { if (e.pointerType !== 'mouse') highlight(null); return; }
+    if (!drag.live) {
+      if (e.pointerId !== drag.id) return;
+      const d = drag, swipe = d.at && performance.now() - d.at < SWIPE && (d.last.r !== d.start.r || d.last.c !== d.start.c);
+      if (e.type === 'pointerup' && G && inBoard(e) && !swipe) commitDrag(); else cancelDrag();
+      return;
+    }
     drag = null; if (e.pointerType !== 'mouse') highlight(null);
   }
   stageEl.addEventListener('pointerup', endDrag);
@@ -1671,7 +1778,7 @@ svg{display:block}
       <ul class="how">
         <li><b>1</b><span>숫자는 그 줄에서 <strong>연달아 채울 칸 수</strong>예요. 숫자가 여럿이면 사이에 빈칸이 한 칸 넘게 있어요.</span></li>
         <li><b>2</b><span>비워야 하는 칸은 <strong>X 표시</strong>를 해 두면 편해요. 줄을 다 채우면 나머지는 저절로 X가 돼요.</span></li>
-        <li><b>3</b><span>틀리면 하트가 하나 줄어요. <strong>하트·힌트 3개씩</strong>(큰 판은 더)으로 시작해요. 끌면 한 줄을 쭉 칠해요. 칸이 작은 큰 판은 손가락 위에 <strong>동그라미 조준점</strong>이 떠요. 맞추고 떼면 칠하고, 한 칸에 잠깐 멈췄다 끌면 한 줄을 칠해요. 두 손가락을 벌리면 확대되고, <strong>확대 중엔 끌면 이동, 꾹 누른 채 끌면 칠하기</strong>예요.</span></li>
+        <li><b>3</b><span>틀리면 하트가 하나 줄어요. <strong>하트·힌트 3개씩</strong>(큰 판은 더)으로 시작해요. 칸은 <strong>손을 뗄 때</strong> 칠해지고, 끌면 한 줄을 쭉 칠해요. 판 밖으로 빼서 떼면 취소돼요. 칸이 작은 큰 판은 손가락 위에 <strong>동그라미 조준점</strong>이 떠요. 맞추고 떼면 그 칸이 골라지고, <strong>한 번 더 톡</strong> 하면 칠해요. 한 칸에 잠깐 멈췄다 끌면 한 줄을 골라요. 두 손가락을 벌리면 확대되고, <strong>확대 중엔 끌면 이동, 꾹 누른 채 끌면 칠하기</strong>예요.</span></li>
         <li><b>4</b><span>지도의 단계를 하나씩 풀며 올라가요. 맨 위 버튼으로 <strong>구간(난이도)을 언제든</strong> 바꿀 수 있어요.</span></li>
       </ul>
       <p class="note">${NATIVE ? '기록은 이 폰에만 저장돼요' : '기록은 이 브라우저에만 저장돼요'}</p>
