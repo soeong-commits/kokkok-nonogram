@@ -494,6 +494,8 @@ svg{display:block}
 (function () {
   'use strict';
   const { PAL, parse, colorsOf, allClues, generate } = Nono;
+  // 안드로이드 앱(Capacitor) 안에서 돌 때만 true예요. 웹사이트에서는 아래 앱 전용 처리가 모두 건너뛰어져요.
+  const CAP = window.Capacitor, NATIVE = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
   // 운영 중인 구간: 우선 30×30(5구간)까지만 열어요. 55×55 마스터(6구간)는 core.js 에 그대로 두고 잠시 쉬어요(2026-11-26). 다시 열려면 OFF 에서 빼요.
   const OFF = ['master'], PACKS = Nono.PACKS.filter((p) => !OFF.includes(p.id));
   const KEY = 'kokkok-nonogram-v1';
@@ -1166,7 +1168,7 @@ svg{display:block}
       G.lives--; G.miss++;
       renderStatus();
       const b = $('board'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
-      if (navigator.vibrate) navigator.vibrate(60);
+      buzz(60);
       say(G.lives === 1 ? '조심, 하트가 하나 남았다냥!' : mode === 'fill' ? '앗, 거긴 빈칸이다냥!' : '앗, 거긴 채우는 칸이다냥!', 'oops');
     } else if (lines.length) say(lines.length > 1 ? '두 줄 한꺼번에! 대단하다냥' : '한 줄 완성! 잘한다냥', 'happy');
     if (solved()) win(i);
@@ -1179,7 +1181,15 @@ svg{display:block}
 
   /* ---------- 타격감 ---------- */
   const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  // 앱에서는 Capacitor 진동(Haptics)을 써요. 배열은 [켬, 쉼, 켬…] 순서예요.
+  function buzz(p) {
+    try {
+      const H = NATIVE && CAP.Plugins && CAP.Plugins.Haptics;
+      if (!H) { if (navigator.vibrate) navigator.vibrate(p); return; }
+      let t = 0;
+      (Array.isArray(p) ? p : [p]).forEach((d, k) => { if (k % 2 === 0) setTimeout(() => { H.vibrate({ duration: d }).catch(() => {}); }, t); t += d; });
+    } catch (e) {}
+  }
   // 판 둘레(stage) 좌표로 별 조각을 흩뿌려요.
   function sparks(x, y, k, dist, size, t) {
     if (calm()) return;
@@ -1664,7 +1674,7 @@ svg{display:block}
         <li><b>3</b><span>틀리면 하트가 하나 줄어요. <strong>하트·힌트 3개씩</strong>(큰 판은 더)으로 시작해요. 끌면 한 줄을 쭉 칠해요. 칸이 작은 큰 판은 손가락 위에 <strong>동그라미 조준점</strong>이 떠요. 맞추고 떼면 칠하고, 한 칸에 잠깐 멈췄다 끌면 한 줄을 칠해요. 두 손가락을 벌리면 확대되고, <strong>확대 중엔 끌면 이동, 꾹 누른 채 끌면 칠하기</strong>예요.</span></li>
         <li><b>4</b><span>지도의 단계를 하나씩 풀며 올라가요. 맨 위 버튼으로 <strong>구간(난이도)을 언제든</strong> 바꿀 수 있어요.</span></li>
       </ul>
-      <p class="note">기록은 이 브라우저에만 저장돼요</p>
+      <p class="note">${NATIVE ? '기록은 이 폰에만 저장돼요' : '기록은 이 브라우저에만 저장돼요'}</p>
       <div class="btns"><button class="pb" data-act="close">알겠어요!</button></div>`);
   }
 
@@ -1675,6 +1685,24 @@ svg{display:block}
     if (from === 'gal') renderGallery(pk); else renderMap();   // 모은 그림에서 풀었으면 그 그림의 난이도 자리로 돌아가요
   }
   $('back').onclick = goBack;
+
+  /* ---------- 안드로이드 앱: 뒤로 버튼 ---------- */
+  // 열린 창 닫기 → 게임에서 나가기 → 모은 그림·다시 고르기에서 한 단계 뒤로 → 지도·처음 화면에서는 2초 안에 한 번 더 누르면 앱을 닫아요.
+  let exitAt = 0;
+  if (NATIVE && CAP.Plugins && CAP.Plugins.App) {
+    const A = CAP.Plugins.App;
+    A.addListener('backButton', () => {
+      if (!$('overlay').hidden) { if (G && (G.won || G.over)) goBack(); else closeSheet(); return; }
+      if ($('pop')) { closePop(); return; }
+      if (!$('game').hidden) { goBack(); return; }
+      if (!$('gal').hidden) { renderMap(); return; }
+      if (!$('onb').hidden && $('onb').querySelector('[data-act="back"]')) { renderOnb(); return; }
+      const now = Date.now();
+      if (now - exitAt < 2000) { A.exitApp(); return; }
+      exitAt = now; toast('한 번 더 누르면 나가요');
+    });
+    A.addListener('pause', () => persist());
+  }
 
   /* ---------- 누르기 ---------- */
   // 아이폰 사파리는 버튼이 아닌 곳(빈 풀밭, 시트 바깥 어두운 배경)을 손가락으로 눌러도 click 을 만들지 않아요.
