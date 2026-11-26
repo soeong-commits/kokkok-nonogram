@@ -202,10 +202,16 @@ svg{display:block}
 .wrap.zoom .rowclues{position:sticky;left:0;z-index:2;border-radius:0}
 .wrap.zoom .corner{position:sticky;top:0;left:0;z-index:3;background:var(--cream)}
 /* 판은 칸 크기대로 넓어지고(틀 폭에 맞춰 줄어들지 않게) 틀 안에서 스크롤돼요 */
-.wrap.zoom .board{width:max-content}
-.wrap.zoom .cc{flex:none;padding:4px 0 3px}
-.wrap.zoom .cc span{line-height:1.02}
-.wrap.zoom .rc{gap:calc(var(--fs)*.28);padding:0 5px}
+.wrap.zoom .board,.wrap.mini .board{width:max-content}
+.wrap.zoom .cc,.wrap.mini .cc{flex:none;padding:4px 0 3px}
+.wrap.zoom .cc span,.wrap.mini .cc span{line-height:1.02}
+.wrap.zoom .rc,.wrap.mini .rc{gap:calc(var(--fs)*.28);padding:0 5px}
+/* 전체 판(확대 전) 큰 판: 확대했을 때와 똑같이 그린 판(숫자 띠 포함)을 통째로 줄여 한 화면에 보여요 */
+.wrap.mini{overflow:hidden;cursor:zoom-in}
+.wrap.mini .board{transform-origin:0 0}
+.ovhint{position:absolute;left:50%;bottom:16px;z-index:4;pointer-events:none;display:flex;align-items:center;gap:6px;padding:8px 15px 7px;border-radius:99px;background:rgba(74,42,20,.86);color:#fff;font-size:15px;line-height:1;white-space:nowrap;transform:translateX(-50%);animation:ovh 1.6s ease-in-out infinite}
+.ovhint svg{width:18px;height:18px;flex:none}
+@keyframes ovh{50%{transform:translateX(-50%) translateY(-4px)}}
 .colclues{grid-column:2;display:flex;border-radius:10px 10px 0 0;overflow:hidden;margin-right:2px}
 .cc{width:var(--cell);background:var(--clue);box-shadow:inset -1px 0 0 rgba(140,85,36,.16);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:6px 0 4px;gap:1px;transition:background .15s}
 .rowclues{grid-row:2;display:flex;flex-direction:column;border-radius:10px 0 0 10px;overflow:hidden;margin-bottom:2px}
@@ -429,6 +435,7 @@ svg{display:block}
         <div class="rowclues" id="rowclues"></div>
         <div class="grid" id="grid"></div>
       </div>
+      <div class="ovhint" id="ovhint" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5l5.5 5.5M10 7.5v5M7.5 10h5"/></svg>보고 싶은 곳을 콕 누르면 확대</div>
     </div>
   </div>
   <div class="controls">
@@ -882,7 +889,7 @@ svg{display:block}
     show('game');
     $('gtitle').textContent = p.label;
     buildBoard();
-    say(s ? '이어서 풀자냥!' : G.overview ? '전체 그림이다냥. 풀 곳을 콕 누르면 확대돼요' : G.canZoom ? '두 손가락을 벌리거나 확대를 누르면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
+    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : G.canZoom ? '두 손가락을 벌리거나 확대를 누르면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
     if (!s) for (let i = 0; i < n; i++) { crossIfDone('r', i, true); crossIfDone('c', i, true); }
     for (let i = 0; i < n * n; i++) paint(i);
     for (let i = 0; i < n; i++) { markClues('r', i); markClues('c', i); }
@@ -953,15 +960,24 @@ svg{display:block}
     G.canZoom = G.n > 15 || f.cell < 24;
     if (G.zc === undefined) G.zc = 0;   // 큰 판도 처음엔 전체 보기(맞춤)로 열어요. 확대 크기는 store.zc 에 기억해 두고 확대할 때 써요.
     const on = zoomed();
-    let cell = on ? Math.max(G.zc, f.cell + 2) : f.cell;
-    const fs = on ? Math.max(10, Math.min(15, Math.round(cell * 0.47))) : f.fs;
     G.overview = !on && f.overview && !G.won;
-    board.className = 'board' + (G.won ? ' won' : '') + ((G.won && G.n >= 20) || G.overview ? ' bare' : '');
+    // 숫자 띠를 넣고 맞추면 숫자를 읽을 수 없는 큰 판은, 확대했을 때와 똑같이 그린 판을 통째로 줄여(축소 그림) 퍼즐 전체를 보여 줘요.
+    let cell = on ? Math.max(G.zc, f.cell + 2) : G.overview ? ZC() : f.cell, k = 1;
+    const fs = on || G.overview ? Math.max(10, Math.min(15, Math.round(cell * 0.47))) : f.fs;
+    board.className = 'board' + (G.won ? ' won' : '') + (G.won && G.n >= 20 ? ' bare' : '');
     board.style.setProperty('--cell', cell + 'px');
     board.style.setProperty('--fs', fs + 'px');
+    board.style.transform = '';
     wrap.classList.toggle('zoom', on);
+    wrap.classList.toggle('mini', G.overview);
     wrap.style.width = ''; wrap.style.height = '';
-    if (!on) {
+    if (G.overview) {
+      const bw = board.offsetWidth, bh = board.offsetHeight;
+      k = Math.min(f.W / bw, f.H / bh);
+      board.style.transform = `scale(${k})`;
+      wrap.style.width = Math.ceil(bw * k) + 24 + 'px'; wrap.style.height = Math.ceil(bh * k) + 24 + 'px';   // 틀 테 7px·여백 5px 양쪽
+      wrap.scrollLeft = 0; wrap.scrollTop = 0;   // 확대 중에 옮겨 둔 자리가 남아 줄인 판이 밀려 보이지 않게
+    } else if (!on) {
       // 숫자 영역을 넉넉히 잡아 남은 폭이 있으면 칸을 그만큼 키워요.
       const spare = Math.min(f.W - board.offsetWidth, f.H - board.offsetHeight);
       if (spare >= G.n && cell < 48) { cell = Math.min(48, cell + Math.floor(spare / G.n)); board.style.setProperty('--cell', cell + 'px'); }
@@ -970,8 +986,11 @@ svg{display:block}
       wrap.style.width = Math.min(board.offsetWidth + 14, st.clientWidth - 6) + 'px';
       wrap.style.height = Math.min(board.offsetHeight + 14, st.clientHeight - 6) + 'px';
     }
-    G.cell = cell;
-    if (on && !G.toldZoom) { G.toldZoom = true; say('확대 중엔 끌면 이동, 꾹 누르고 끌면 칠하기다냥'); }
+    G.cell = cell * k;   // 화면에 보이는 칸 크기
+    // 확대하거나 줄일 때마다 콕이 말풍선을 지금 상태에 맞게 바꿔요.
+    if (G.wasOn !== undefined && G.wasOn !== on && !G.won) say(on ? '확대 중엔 끌면 이동, 꾹 누르고 끌면 칠하기다냥' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : '전체 판이다냥. 끌면 한 줄을 칠해요');
+    G.wasOn = on;
+    $('ovhint').hidden = !G.overview;
     $('zoom').hidden = !G.canZoom;
     $('zoom').classList.toggle('on', on);
     $('zoom').setAttribute('aria-pressed', String(on));
@@ -1003,7 +1022,7 @@ svg{display:block}
   function gridFrac(at) { const r = $('grid').getBoundingClientRect(); return { fx: (at.x - r.left) / r.width, fy: (at.y - r.top) / r.height }; }
   $('zoom').onclick = () => {
     if (!G || !G.canZoom) return;
-    if (zoomed()) { setCell(0); if (G.overview) say('전체 그림이다냥. 풀 곳을 누르면 확대돼요'); }
+    if (zoomed()) setCell(0);
     else { const zc = Math.max(store.zc || 0, ZC()); setCell(zc, { fx: 0, fy: 0 }, null); const w = $('board').parentElement; w.scrollLeft = 0; w.scrollTop = 0; }
   };
   // 확대 중에 화면 밖 칸(힌트 등)을 숫자 띠에 가리지 않게 보이는 곳으로 데려와요.
@@ -1326,7 +1345,11 @@ svg{display:block}
   // 손가락은 판 둘레 여백까지 포함한 판 영역 전체에서 받아요. 판 칸 위 한 손가락 = 칠하기,
   // 숫자 띠·여백 위 한 손가락 = 판 옮기기(확대 중), 어디든 두 손가락 = 옮기기·벌려 확대·오므려 전체 보기.
   const boardWrap = document.querySelector('#game .wrap'), stageEl = $('stage');
-  let pan1 = null;
+  let pan1 = null, ovTap = null;
+  function zoomAt(at) {
+    const fr = gridFrac(at); fr.fx = Math.max(0, Math.min(1, fr.fx)); fr.fy = Math.max(0, Math.min(1, fr.fy));
+    setCell(Math.max(store.zc || 0, ZC()), fr, at);
+  }
   stageEl.addEventListener('pointerdown', (e) => {
     if (!G || G.won || G.over || (e.button && e.button !== 0)) return;
     stopFling();
@@ -1334,14 +1357,14 @@ svg{display:block}
     try { stageEl.setPointerCapture(e.pointerId); } catch (err) {}
     e.preventDefault();
     if (pts.size >= 2) {
-      pan1 = null;
+      pan1 = null; ovTap = null;
       if (pend) { clearTimeout(pend.t); pend = null; highlight(null); }
       if (drag) { drag = null; highlight(null); }
       undoTouch();
       if (pts.size === 2) startPan();
       return;
     }
-    if (G.overview) { if (grid.contains(e.target)) { const at = { x: e.clientX, y: e.clientY }; setCell(Math.max(store.zc || 0, ZC()), gridFrac(at), at); } return; }
+    if (G.overview) { ovTap = { id: e.pointerId, x: e.clientX, y: e.clientY }; return; }
     const pos = grid.contains(e.target) ? cellAt(e) : null, touch = e.pointerType !== 'mouse';
     touchSnap = null;
     if (!pos) { if (zoomed()) pan1 = panStart(e.clientX, e.clientY); return; }
@@ -1353,6 +1376,7 @@ svg{display:block}
     if (!G) return;
     if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pan) { if (pts.size >= 2) movePan(); return; }
+    if (ovTap && e.pointerId === ovTap.id && Math.hypot(e.clientX - ovTap.x, e.clientY - ovTap.y) > 10) ovTap = null;
     if (pan1) { panMove(e); return; }
     if (pend && e.pointerId === pend.id && Math.hypot(e.clientX - pend.x, e.clientY - pend.y) > (pend.hold ? SLOP : 6)) {
       // 확대 중 꾹 누르기 전에 움직이면 칠하지 않고 판을 옮겨요(손가락이 처음 닿은 곳부터 이어서).
@@ -1367,6 +1391,7 @@ svg{display:block}
   });
   function endDrag(e) {
     pts.delete(e.pointerId);
+    if (ovTap && e.pointerId === ovTap.id) { const t = ovTap; ovTap = null; if (e.type === 'pointerup' && G && G.overview && !pan) zoomAt({ x: t.x, y: t.y }); return; }
     if (pan) { if (!pts.size) { if (pan.zooming) { store.zc = zoomed() ? G.zc : 0; save(); } pan = null; } return; }
     if (pan1) { if (!pts.size) panEnd(); return; }
     if (pend && e.pointerId === pend.id) { if (e.type === 'pointerup') commit(); else { clearTimeout(pend.t); pend = null; } }
