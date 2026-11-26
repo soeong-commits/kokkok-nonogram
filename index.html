@@ -219,6 +219,10 @@ svg{display:block}
 .rc{height:var(--cell);background:var(--clue);box-shadow:inset 0 -1px 0 rgba(140,85,36,.16);display:flex;justify-content:flex-end;align-items:center;padding:0 6px 0 8px;gap:calc(var(--fs)*.42);transition:background .15s}
 .cc.s5{box-shadow:inset -2px 0 0 rgba(140,85,36,.4)}
 .rc.s5{box-shadow:inset 0 -2px 0 rgba(140,85,36,.4)}
+/* 칸은 늘 1:1: 다섯 칸 묶음의 굵은 흰 틈(2px)·마지막 줄(틈 없음)만큼 칸 자리를 늘리고 줄여서 칠해지는 안쪽은 모든 칸이 같은 정사각형이에요 */
+.cc.s5{width:calc(var(--cell) + 1px)}.cc.e{width:calc(var(--cell) - 1px)}
+.rc.s5{height:calc(var(--cell) + 1px)}.rc.e{height:calc(var(--cell) - 1px)}
+.cc span{transform-origin:50% 50%}
 .cc span,.rc span{font-size:var(--fs);line-height:1.12;color:var(--tx);transition:opacity .2s}
 .cc span.d,.rc span.d{opacity:.28}
 .cc span[data-w]{font-size:calc(var(--fs)*.88);letter-spacing:-.07em}
@@ -286,6 +290,28 @@ svg{display:block}
 .controls.four{gap:8px}
 /* 큰 판을 세로가 짧은 폰에서 볼 때: 말풍선·하트·버튼을 줄여 판 자리를 넓혀요 */
 #game.tight .status{padding:6px 0 2px;gap:8px}
+/* 큰 판 조준점(손가락 위에 뜨는 과녁): 손끝에 가리지 않게 손가락보다 위 칸을 겨눠요 */
+.status{position:relative}
+.status.aiming .bubble{visibility:hidden}
+.readout{position:absolute;z-index:3;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:3px 12px;background:#fff;border:3px solid #FFB061;border-radius:16px;
+  font-family:var(--num);font-weight:900;color:var(--tx);overflow:hidden;pointer-events:none}
+.readout[hidden]{display:none}
+.readout .ro{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:var(--rf,19px);line-height:1.1}
+.readout .ro em{flex:none;min-width:46px;font-style:normal;font-family:var(--kr);font-weight:400;font-size:13px;color:var(--sub)}
+.readout .ro b.d{opacity:.28}
+.aimo{position:absolute;pointer-events:none;z-index:4;display:none}
+.wrap.aiming .aimo{display:block}
+.wrap.aiming .aimo.ln{display:none}
+.wrap.aiming.line .aimo.ln{display:block}
+.aimo.rw,.aimo.cl{background:rgba(255,158,59,.2)}
+.aimo.ln{background:rgba(255,122,26,.42);border-radius:2px}
+.aimo.dot{background:rgba(255,122,26,.6);border-radius:1px}
+.aimo.ring{width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid #FF7A1A;box-shadow:0 0 0 2px #fff,inset 0 0 0 2px #fff;transition:transform .12s}
+.aimo.ring.charge{animation:aimch .48s linear forwards}
+.aimo.ring.lock{transform:scale(.72);background:rgba(255,122,26,.25)}
+@keyframes aimch{from{transform:scale(1)}to{transform:scale(.8)}}
+.aimo.num{margin:-46px 0 0;transform:translateX(-50%);padding:3px 9px 2px;border-radius:99px;background:#FF7A1A;color:#fff;font-family:var(--num);font-weight:900;font-size:14px;white-space:nowrap;box-shadow:0 0 0 2px #fff}
+.wrap.aiming .aimo.num:empty{display:none}
 #game.tight .status .masc{width:44px;height:44px}
 #game.tight .bubble{font-size:14px;line-height:1.25;padding:6px 10px 5px}
 #game.tight .hearts img{width:26px;height:26px}
@@ -437,6 +463,7 @@ svg{display:block}
   <div class="status">
     <div class="masc" id="gmasc"></div>
     <div class="bubble" id="bubble" aria-live="polite"></div>
+    <div class="readout" id="readout" hidden></div>
     <div class="hearts" id="hearts" aria-label="남은 하트"></div>
   </div>
   <div class="stage" id="stage">
@@ -447,6 +474,7 @@ svg{display:block}
         <div class="rowclues" id="rowclues"></div>
         <div class="grid" id="grid"></div>
       </div>
+      <i class="aimo rw"></i><i class="aimo cl"></i><i class="aimo ln"></i><i class="aimo dot"></i><i class="aimo ring"></i><i class="aimo num"></i>
       <div class="ovhint" id="ovhint" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5l5.5 5.5M10 7.5v5M7.5 10h5"/></svg>보고 싶은 곳을 콕 누르면 확대</div>
     </div>
   </div>
@@ -875,7 +903,7 @@ svg{display:block}
   }
 
   /* ---------- 게임 ---------- */
-  let G = null, els = [], rcEls = [], ccEls = [], hl = null, drag = null, timer = null, sayT = null;
+  let G = null, els = [], rcEls = [], ccEls = [], hl = null, drag = null, timer = null, sayT = null, edgeC = null;
 
   // 콕이가 말풍선으로 한마디 해요. hold가 없으면 잠시 뒤 평소 표정으로 돌아와요.
   function say(text, mood, hold) {
@@ -903,7 +931,7 @@ svg{display:block}
     show('game');
     $('gtitle').textContent = p.label;
     buildBoard();
-    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : G.canZoom ? '끌어서 칠하고, 두 손가락을 벌리면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
+    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : coarse && aimOn() ? '손가락 위 동그라미로 칸을 맞추고 떼면 칠한다냥' : G.canZoom ? '끌어서 칠하고, 두 손가락을 벌리면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
     if (!s) for (let i = 0; i < n; i++) { crossIfDone('r', i, true); crossIfDone('c', i, true); }
     for (let i = 0; i < n * n; i++) paint(i);
     for (let i = 0; i < n; i++) { markClues('r', i); markClues('c', i); }
@@ -952,7 +980,7 @@ svg{display:block}
     const board = $('board');
     board.style.setProperty('--n', n);
     const spans = (c) => (c.length ? c : [0]).map((v) => `<span${v > 9 ? ' data-w' : ''}>${v}</span>`).join('');   // 두 자리 수는 표시(세로 숫자 띠에서 좁게 써요)
-    const s5 = (i) => (i % 5 === 4 && i !== n - 1 ? ' s5' : '');
+    const s5 = (i) => (i === n - 1 ? ' e' : i % 5 === 4 ? ' s5' : '');
     $('colclues').innerHTML = cols.map((c, i) => `<div class="cc${s5(i)}">${spans(c)}</div>`).join('');
     $('rowclues').innerHTML = rows.map((c, i) => `<div class="rc${s5(i)}">${spans(c)}</div>`).join('');
     let h = '';
@@ -963,6 +991,10 @@ svg{display:block}
       h += `<div class="${cls.join(' ')}"></div>`;
     }
     $('grid').innerHTML = h;
+    // 칸 자리: 보통 칸은 --cell, 다섯 칸 묶음 끝은 +1px(굵은 틈 2px), 마지막 칸은 -1px(틈 없음) → 칠해지는 안쪽은 모두 (--cell - 1px) 정사각형
+    const tracks = Array.from({ length: n }, (_, i) => (i === n - 1 ? 'calc(var(--cell) - 1px)' : i % 5 === 4 ? 'calc(var(--cell) + 1px)' : 'var(--cell)')).join(' ');
+    $('grid').style.gridTemplateColumns = tracks; $('grid').style.gridTemplateRows = tracks;
+    edgeC = null;
     els = Array.from($('grid').children);
     els.forEach((el, i) => { el.dataset.base = el.className; if (G.p.colors[i]) el.style.setProperty('--c', G.p.colors[i]); });
     rcEls = Array.from($('rowclues').children); ccEls = Array.from($('colclues').children);
@@ -1008,8 +1040,10 @@ svg{display:block}
       wrap.style.height = Math.min(board.offsetHeight + 14, st.clientHeight - 6) + 'px';
     }
     G.cell = cell * k;   // 화면에 보이는 칸 크기
+    edgeC = null;
+    fitClueSpans();
     // 확대하거나 줄일 때마다 콕이 말풍선을 지금 상태에 맞게 바꿔요.
-    if (G.wasOn !== undefined && G.wasOn !== on && !G.won) say(on ? '확대 중엔 끌면 이동, 꾹 누르고 끌면 칠하기다냥' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : '전체 판이다냥. 끌면 한 줄을 칠해요');
+    if (G.wasOn !== undefined && G.wasOn !== on && !G.won) say(on ? '확대 중엔 끌면 이동, 꾹 누르고 끌면 칠하기다냥' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : coarse && G.cell < 16 ? '전체 판이다냥. 동그라미를 맞추고 떼면 칠해요' : '전체 판이다냥. 끌면 한 줄을 칠해요');
     G.wasOn = on;
     $('ovhint').hidden = !G.overview;
     $('zoom').hidden = !G.canZoom;
@@ -1051,10 +1085,22 @@ svg{display:block}
     if (!zoomed()) return;
     const wrap = $('board').parentElement, g = $('grid');
     const r = Math.floor(i / G.n), c = i % G.n;
-    const x = g.offsetLeft + c * G.cell, y = g.offsetTop + r * G.cell;
+    const x = g.offsetLeft + els[i].offsetLeft, y = g.offsetTop + els[i].offsetTop;
     const left = wrap.scrollLeft + g.offsetLeft, top = wrap.scrollTop + g.offsetTop;
     if (x < left || x + G.cell > wrap.scrollLeft + wrap.clientWidth) wrap.scrollLeft = x - g.offsetLeft - (wrap.clientWidth - g.offsetLeft) / 2;
     if (y < top || y + G.cell > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = y - g.offsetTop - (wrap.clientHeight - g.offsetTop) / 2;
+  }
+
+  // 세로 숫자 띠의 숫자(특히 두 자리 수)가 칸 폭을 넘으면 그 칸 폭에 맞게 가로로만 살짝 좁혀요(옆 칸 숫자와 붙거나 겹치지 않게).
+  function fitClueSpans() {
+    for (const cc of ccEls) {
+      const w = cc.clientWidth - 1;
+      for (const sp of cc.children) {
+        sp.style.transform = '';
+        const sw = sp.offsetWidth;
+        if (sw > w && w > 0) sp.style.transform = `scaleX(${(w / sw).toFixed(3)})`;
+      }
+    }
   }
 
   // 칸 상태: 0 빈칸 / 1 채움 / 2 X / 3 잘못 채우려던 칸(빨간 X) / 4 잘못 X 하려던 칸(채움)
@@ -1155,9 +1201,9 @@ svg{display:block}
       els[ci].animate([{ transform: 'scale(1)', filter: 'brightness(1)', zIndex: 2 }, { transform: 'scale(1.34)', filter: 'brightness(1.5)', zIndex: 2, offset: 0.35 }, { transform: 'scale(1)', filter: 'brightness(1)', zIndex: 2 }],
         { duration: 430, delay: Math.abs(j - p) * 26, easing: 'cubic-bezier(.3,1.35,.5,1)' });
     });
-    const sw = document.createElement('i'), c = G.cell;
+    const sw = document.createElement('i');
     sw.className = 'sweep ' + (kind === 'r' ? 'h' : 'v') + (p > G.n / 2 ? ' rev' : '');
-    if (kind === 'r') { sw.style.top = k * c + 'px'; sw.style.height = c + 'px'; } else { sw.style.left = k * c + 'px'; sw.style.width = c + 'px'; }
+    if (kind === 'r') { const e0 = els[k * G.n]; sw.style.top = e0.offsetTop + 'px'; sw.style.height = e0.offsetHeight + 'px'; } else { const e0 = els[k]; sw.style.left = e0.offsetLeft + 'px'; sw.style.width = e0.offsetWidth + 'px'; }
     grid.appendChild(sw); setTimeout(() => sw.remove(), 520);
     const strip = (kind === 'r' ? rcEls : ccEls)[k];
     if (strip && !G.overview) {
@@ -1237,12 +1283,122 @@ svg{display:block}
 
   /* ---------- 터치·드래그 ---------- */
   const grid = $('grid');
+  // 칸 경계(화면 좌표). 다섯 칸마다 틈이 1px 더 넓어서 칸 크기로 나누지 않고 실제 칸 자리에서 읽어요(판이 움직이면 다시 읽어요).
+  function edgesNow() {
+    const rect = grid.getBoundingClientRect(), key = `${G.n},${rect.left},${rect.top},${rect.width}`;
+    if (edgeC && edgeC.key === key) return edgeC;
+    const s = rect.width / (grid.offsetWidth || 1), xs = [], ys = [];
+    for (let i = 0; i < G.n; i++) { xs.push(rect.left + els[i].offsetLeft * s); ys.push(rect.top + els[i * G.n].offsetTop * s); }
+    return (edgeC = { key, xs, ys, rect });
+  }
+  function lineAt(arr, v) { let k = 0; while (k + 1 < arr.length && arr[k + 1] <= v) k++; return k; }
   function cellAt(e, clamp) {
-    const rect = grid.getBoundingClientRect();
-    let c = Math.floor((e.clientX - rect.left) / G.cell), r = Math.floor((e.clientY - rect.top) / G.cell);
-    if (clamp) { c = Math.max(0, Math.min(G.n - 1, c)); r = Math.max(0, Math.min(G.n - 1, r)); }
-    else if (c < 0 || r < 0 || c >= G.n || r >= G.n) return null;
-    return { r, c };
+    const E = edgesNow(), R = E.rect, x = e.clientX, y = e.clientY;
+    if (!clamp && (x < R.left || y < R.top || x >= R.right || y >= R.bottom)) return null;
+    return { r: lineAt(E.ys, y), c: lineAt(E.xs, x) };
+  }
+  /* ---------- 조준점(큰 판 확대 전, 손가락) ----------
+     레퍼런스: 큰 판을 작은 폰에서 푸는 노노그램 앱들(Pic-a-Pix의 손끝 커서, Nonograms Katana의 정밀 커서)은
+     손가락 바로 밑이 아니라 손가락 위에 뜨는 커서로 칸을 고르고, 지금 줄의 숫자를 크게 보여 줘요.
+     · 판에 손가락을 대면 손끝보다 위 칸에 조준점이 떠요. 끌어서 맞추고 떼면 그 칸을 칠해요(손끝에 가려 엉뚱한 칸을 칠하지 않게).
+     · 조준점을 한 칸에 0.48초 멈추면 그 칸이 시작점으로 고정돼요(톡 진동). 그대로 끌면 한 줄이 미리 보이고, 떼면 그 줄을 칠해요.
+     · 조준점을 판 밖으로 빼고 떼면 아무것도 칠하지 않아요. 두 번째 손가락이 닿아도 취소되고 확대로 넘어가요.
+     · 위쪽 말풍선 자리에는 조준한 가로·세로 줄의 숫자를 크게 보여 줘요. */
+  const AIM_UP = 46, AIM_HOLD = 480, coarse = window.matchMedia ? matchMedia('(pointer: coarse)').matches : true;
+  let aim = null;
+  const aimEl = (k) => boardWrapEl().querySelector('.aimo.' + k);
+  function boardWrapEl() { return $('board').parentElement; }
+  function aimOn() { return !!(G && !G.won && !G.over && !zoomed() && !G.overview && G.cell < 16); }
+  function aimTarget(x, y) {
+    const R = edgesNow().rect, m = Math.max(12, G.cell * 1.5);
+    // 판 밑 여백이 46px보다 좁으면(맨 아랫줄을 겨누려면 손가락이 판 자리 밖으로 나가야 해서) 손가락 위치를 판 높이에 고르게 펴서
+    // 판 자리 맨 아래를 누르면 맨 아랫줄이 겨눠지게 해요(위로 갈수록 46px 위, 아래로 갈수록 조금 덜 위).
+    const stB = $('stage').getBoundingClientRect().bottom - 6, y0 = R.top + AIM_UP;
+    let ty = y - AIM_UP;
+    if (stB - R.bottom < AIM_UP && y > y0) ty = R.top + (y - y0) * ((R.bottom - R.top) / Math.max(1, stB - y0));
+    if (x < R.left - m || x > R.right + m || ty < R.top - m || ty > R.bottom + m) return null;
+    return cellAt({ clientX: x, clientY: ty }, true);
+  }
+  function aimSpan(a) {   // 시작점에서 지금 조준점까지 더 많이 움직인 쪽으로 곧은 줄
+    const p = a.pos, st = a.anchor;
+    if (!p || !st) return null;
+    const end = Math.abs(p.c - st.c) > Math.abs(p.r - st.r) ? { r: st.r, c: p.c } : { r: p.r, c: st.c };
+    return { st, end, len: Math.abs(end.r - st.r) + Math.abs(end.c - st.c) + 1 };
+  }
+  function cellBox(r, c, wr) {   // 칸 안쪽(칠해지는 정사각형)의 틀 기준 자리
+    const b = els[r * G.n + c].getBoundingClientRect(), el = els[r * G.n + c];
+    return { l: b.left - wr.left - boardWrapEl().clientLeft, t: b.top - wr.top - boardWrapEl().clientTop, w: el.clientWidth * (b.width / el.offsetWidth), h: el.clientHeight * (b.height / el.offsetHeight) };
+  }
+  function place(el, l, t, w, h) { el.style.left = l + 'px'; el.style.top = t + 'px'; if (w != null) { el.style.width = w + 'px'; el.style.height = h + 'px'; } }
+  function clueRow(kind, k) {
+    const strip = (kind === 'r' ? rcEls : ccEls)[k];
+    return [...strip.children].map((sp) => `<b${sp.classList.contains('d') ? ' class="d"' : ''}>${sp.textContent}</b>`).join('');
+  }
+  function aimDraw() {
+    const w = boardWrapEl(), a = aim, p = a && a.pos;
+    w.classList.toggle('aiming', !!p);
+    const L = a && aimSpan(a);
+    w.classList.toggle('line', !!(L && p));
+    highlight(p || null);
+    const ro = $('readout'), stt = document.querySelector('#game .status');
+    if (!p) { ro.hidden = true; stt.classList.remove('aiming'); return; }
+    const wr = w.getBoundingClientRect(), gr = grid.getBoundingClientRect(), bw = w.clientLeft, bt = w.clientTop;
+    const cb = cellBox(p.r, p.c, wr);
+    place(aimEl('rw'), gr.left - wr.left - bw, cb.t, gr.width - 2, cb.h);
+    place(aimEl('cl'), cb.l, gr.top - wr.top - bt, cb.w, gr.height - 2);
+    place(aimEl('dot'), cb.l, cb.t, cb.w, cb.h);
+    const ring = aimEl('ring');
+    place(ring, cb.l + cb.w / 2, cb.t + cb.h / 2);
+    ring.classList.toggle('lock', !!a.anchor);
+    if (!a.anchor && a.fresh) { ring.classList.remove('charge'); void ring.offsetWidth; ring.classList.add('charge'); a.fresh = false; }
+    if (a.anchor) ring.classList.remove('charge');
+    const num = aimEl('num');
+    if (L) {
+      const s0 = cellBox(L.st.r, L.st.c, wr), s1 = cellBox(L.end.r, L.end.c, wr);
+      const l = Math.min(s0.l, s1.l), t = Math.min(s0.t, s1.t);
+      place(aimEl('ln'), l, t, Math.max(s0.l + s0.w, s1.l + s1.w) - l, Math.max(s0.t + s0.h, s1.t + s1.h) - t);
+      num.textContent = L.len + '칸';
+    } else num.textContent = '';
+    place(num, cb.l + cb.w / 2, cb.t);
+    // 조준한 줄의 숫자를 말풍선 자리에 크게
+    const bb = $('bubble');
+    ro.style.left = bb.offsetLeft + 'px'; ro.style.top = bb.offsetTop + 'px'; ro.style.width = bb.offsetWidth + 'px'; ro.style.height = bb.offsetHeight + 'px';
+    ro.innerHTML = `<div class="ro"><em>가로 ${p.r + 1}</em>${clueRow('r', p.r)}</div><div class="ro"><em>세로 ${p.c + 1}</em>${clueRow('c', p.c)}</div>`;
+    ro.hidden = false; stt.classList.add('aiming');
+    let f = Math.min(19, Math.floor((bb.offsetHeight - 12) / 2.3));
+    ro.style.setProperty('--rf', f + 'px');
+    while (f > 11 && [...ro.children].some((d) => d.scrollWidth > ro.clientWidth - 22)) { f--; ro.style.setProperty('--rf', f + 'px'); }
+  }
+  function aimStart(e) {
+    aim = { id: e.pointerId, pos: null, anchor: null, t: 0, fresh: true };
+    aimMove(e.clientX, e.clientY);
+  }
+  function aimMove(x, y) {
+    const p = aimTarget(x, y), a = aim;
+    if (p && a.pos && p.r === a.pos.r && p.c === a.pos.c) return;
+    a.pos = p;
+    if (!a.anchor) {
+      clearTimeout(a.t); a.fresh = true;
+      if (p) a.t = setTimeout(() => { if (aim === a && a.pos) { a.anchor = a.pos; buzz(14); aimDraw(); } }, AIM_HOLD);
+    }
+    aimDraw();
+  }
+  function aimEnd(ok) {
+    const a = aim; aim = null;
+    if (!a) return;
+    clearTimeout(a.t);
+    const L = aimSpan(a), p = a.pos;
+    a.pos = null; aim = a; aimDraw(); aim = null;
+    if (!ok || !p || !G || G.won || G.over) return;
+    touchSnap = null;
+    if (!L) { act(p.r * G.n + p.c, G.mode); persist(); return; }
+    let cur = L.st;
+    for (;;) {
+      if (act(cur.r * G.n + cur.c, G.mode) === 'miss' || G.won || G.over) break;
+      if (cur.r === L.end.r && cur.c === L.end.c) break;
+      cur = { r: cur.r + Math.sign(L.end.r - cur.r), c: cur.c + Math.sign(L.end.c - cur.c) };
+    }
+    persist();
   }
   function highlight(pos) {
     if (hl) { rcEls[hl.r].classList.remove('hl'); ccEls[hl.c].classList.remove('hl'); }
@@ -1379,6 +1535,7 @@ svg{display:block}
     e.preventDefault();
     if (pts.size >= 2) {
       pan1 = null; ovTap = null;
+      if (aim) aimEnd(false);
       if (pend) { clearTimeout(pend.t); pend = null; highlight(null); }
       if (drag) { drag = null; highlight(null); }
       undoTouch();
@@ -1386,7 +1543,9 @@ svg{display:block}
       return;
     }
     if (G.overview) { ovTap = { id: e.pointerId, x: e.clientX, y: e.clientY }; return; }
-    const pos = grid.contains(e.target) ? cellAt(e) : null, touch = e.pointerType !== 'mouse';
+    const touch = e.pointerType !== 'mouse';
+    if (touch && aimOn()) { touchSnap = null; aimStart(e); return; }
+    const pos = grid.contains(e.target) ? cellAt(e) : null;
     touchSnap = null;
     if (!pos) { if (zoomed()) pan1 = panStart(e.clientX, e.clientY); return; }
     if (touch && zoomed()) { pend = { pos, id: e.pointerId, x: e.clientX, y: e.clientY, hold: true, t: setTimeout(() => commit(true), HOLD) }; return; }
@@ -1399,6 +1558,7 @@ svg{display:block}
     if (pan) { if (pts.size >= 2) movePan(); return; }
     if (ovTap && e.pointerId === ovTap.id && Math.hypot(e.clientX - ovTap.x, e.clientY - ovTap.y) > 10) ovTap = null;
     if (pan1) { panMove(e); return; }
+    if (aim) { if (e.pointerId === aim.id) aimMove(e.clientX, e.clientY); return; }
     if (pend && e.pointerId === pend.id && Math.hypot(e.clientX - pend.x, e.clientY - pend.y) > (pend.hold ? SLOP : 6)) {
       // 확대 중 꾹 누르기 전에 움직이면 칠하지 않고 판을 옮겨요(손가락이 처음 닿은 곳부터 이어서).
       if (pend.hold) { const p = pend; clearTimeout(p.t); pend = null; pan1 = panStart(p.x, p.y); panMove(e); return; }
@@ -1412,6 +1572,7 @@ svg{display:block}
   });
   function endDrag(e) {
     pts.delete(e.pointerId);
+    if (aim && e.pointerId === aim.id) { aimEnd(e.type === 'pointerup'); return; }
     if (ovTap && e.pointerId === ovTap.id) { const t = ovTap; ovTap = null; if (e.type === 'pointerup' && G && G.overview && !pan) zoomAt({ x: t.x, y: t.y }); return; }
     if (pan) { if (!pts.size) { if (pan.zooming) { store.zc = zoomed() ? G.zc : 0; save(); } pan = null; } return; }
     if (pan1) { if (!pts.size) panEnd(); return; }
@@ -1500,7 +1661,7 @@ svg{display:block}
       <ul class="how">
         <li><b>1</b><span>숫자는 그 줄에서 <strong>연달아 채울 칸 수</strong>예요. 숫자가 여럿이면 사이에 빈칸이 한 칸 넘게 있어요.</span></li>
         <li><b>2</b><span>비워야 하는 칸은 <strong>X 표시</strong>를 해 두면 편해요. 줄을 다 채우면 나머지는 저절로 X가 돼요.</span></li>
-        <li><b>3</b><span>틀리면 하트가 하나 줄어요. <strong>하트·힌트 3개씩</strong>(큰 판은 더)으로 시작해요. 끌면 한 줄을 쭉 칠해요. 큰 판은 두 손가락을 벌리면 확대되고, <strong>확대 중엔 끌면 이동, 꾹 누른 채 끌면 칠하기</strong>예요.</span></li>
+        <li><b>3</b><span>틀리면 하트가 하나 줄어요. <strong>하트·힌트 3개씩</strong>(큰 판은 더)으로 시작해요. 끌면 한 줄을 쭉 칠해요. 칸이 작은 큰 판은 손가락 위에 <strong>동그라미 조준점</strong>이 떠요. 맞추고 떼면 칠하고, 한 칸에 잠깐 멈췄다 끌면 한 줄을 칠해요. 두 손가락을 벌리면 확대되고, <strong>확대 중엔 끌면 이동, 꾹 누른 채 끌면 칠하기</strong>예요.</span></li>
         <li><b>4</b><span>지도의 단계를 하나씩 풀며 올라가요. 맨 위 버튼으로 <strong>구간(난이도)을 언제든</strong> 바꿀 수 있어요.</span></li>
       </ul>
       <p class="note">기록은 이 브라우저에만 저장돼요</p>
