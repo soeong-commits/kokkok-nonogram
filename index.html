@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#C5D23A">
 <title>콕콕 노노그램</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,12 +23,13 @@
   --kr:"Jua",-apple-system,"Apple SD Gothic Neo",sans-serif;
   --num:"Nunito","Jua",-apple-system,sans-serif;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 html,body{margin:0;min-height:100%;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{color:var(--tx);font-family:var(--kr);background:var(--grass) repeating-linear-gradient(135deg,transparent 0 64px,rgba(150,178,40,.24) 64px 128px);
   -webkit-font-smoothing:antialiased;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
-img{-webkit-user-drag:none}
+/* 아이폰: 그림을 꾹 눌러도 끌어 옮기기·복사·저장 메뉴가 뜨지 않게, 그림은 손가락을 받지 않고 감싼 버튼·칸이 받아요 */
+img{-webkit-user-drag:none;pointer-events:none}
 [hidden]{display:none!important}
 svg{display:block}
 .ol{color:#fff;-webkit-text-stroke:5px var(--grass-s);paint-order:stroke fill}
@@ -185,7 +186,7 @@ svg{display:block}
 .status .masc img{position:absolute;width:150%;max-width:none;left:-25%;top:6%}
 .status .masc.jump{animation:jump .45s}
 @keyframes jump{30%{transform:translateY(-8px) rotate(-6deg)}60%{transform:translateY(0) rotate(4deg)}}
-.bubble{flex:1;min-width:0;position:relative;background:#fff;border:3px solid var(--white-s);border-radius:16px;padding:8px 12px 7px;font-size:15px;line-height:1.3}
+.bubble{flex:1;min-width:0;position:relative;background:#fff;border:3px solid var(--white-s);border-radius:16px;padding:8px 12px 7px;font-size:15px;line-height:1.3;word-break:keep-all}
 .bubble::before{content:"";position:absolute;left:-8px;top:50%;width:12px;height:12px;margin-top:-6px;background:#fff;border:solid var(--white-s);border-width:0 0 3px 3px;transform:rotate(45deg)}
 .hearts{display:flex;flex:none}
 .hearts img{width:31px;height:31px;object-fit:contain;transition:transform .25s,filter .25s,opacity .25s}
@@ -221,6 +222,7 @@ svg{display:block}
 .cc span,.rc span{font-size:var(--fs);line-height:1.12;color:var(--tx);transition:opacity .2s}
 .cc span.d,.rc span.d{opacity:.28}
 .cc span[data-w]{font-size:calc(var(--fs)*.88);letter-spacing:-.07em}
+.board.tiny .cc span[data-w]{font-size:calc(var(--fs)*.8);letter-spacing:-.11em}   /* 30×30 확대 전: 두 자리 수가 옆 칸 숫자와 붙지 않게 칸 폭 안으로 */
 .cc.hl,.rc.hl{background:var(--clue-hl)}
 .grid{grid-row:2;grid-column:2;display:grid;grid-template-columns:repeat(var(--n),var(--cell));grid-auto-rows:var(--cell);
   border-right:2px solid var(--gb);border-bottom:2px solid var(--gb);border-radius:0 0 10px 0;overflow:hidden;background:var(--cellbg);touch-action:none;cursor:pointer}
@@ -282,6 +284,16 @@ svg{display:block}
 .cbtn:disabled{opacity:.5}
 /* 확대 버튼까지 4개일 때 좁은 폰에서도 한 줄에 들어오게 */
 .controls.four{gap:8px}
+/* 큰 판을 세로가 짧은 폰에서 볼 때: 말풍선·하트·버튼을 줄여 판 자리를 넓혀요 */
+#game.tight .status{padding:6px 0 2px;gap:8px}
+#game.tight .status .masc{width:44px;height:44px}
+#game.tight .bubble{font-size:14px;line-height:1.25;padding:6px 10px 5px}
+#game.tight .hearts img{width:26px;height:26px}
+#game.tight .hearts .hn{font-size:19px}
+#game.tight .controls{padding-top:8px}
+#game.tight .cbtn{gap:3px;font-size:13px}
+#game.tight .cbtn .o{height:50px;border-radius:15px}
+#game.tight .cbtn .o img{width:36px;height:36px}
 .controls.four .cbtn .o{width:62px}
 .sep{width:3px;height:40px;margin-top:12px;border-radius:2px;background:rgba(74,42,20,.25)}
 
@@ -453,7 +465,9 @@ svg{display:block}
 <script>
 (function () {
   'use strict';
-  const { PACKS, PAL, parse, colorsOf, allClues, generate } = Nono;
+  const { PAL, parse, colorsOf, allClues, generate } = Nono;
+  // 운영 중인 구간: 우선 30×30(5구간)까지만 열어요. 55×55 마스터(6구간)는 core.js 에 그대로 두고 잠시 쉬어요(2026-11-26). 다시 열려면 OFF 에서 빼요.
+  const OFF = ['master'], PACKS = Nono.PACKS.filter((p) => !OFF.includes(p.id));
   const KEY = 'kokkok-nonogram-v1';
   // 하트·힌트 개수: 15×15까지 3·3, 큰 판은 칸이 많고 작아서 더 넉넉히(20×20 5·4, 30×30 7·5, 55×55 10·8).
   function rulesOf(n) { return n >= 50 ? { lives: 10, hints: 8 } : n >= 30 ? { lives: 7, hints: 5 } : n >= 20 ? { lives: 5, hints: 4 } : { lives: 3, hints: 3 }; }
@@ -889,7 +903,7 @@ svg{display:block}
     show('game');
     $('gtitle').textContent = p.label;
     buildBoard();
-    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : G.canZoom ? '두 손가락을 벌리거나 확대를 누르면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
+    say(s ? '이어서 풀자냥!' : G.overview ? '전체 판이다냥. 풀 곳을 콕 누르면 크게 보여요' : G.canZoom ? '끌어서 칠하고, 두 손가락을 벌리면 커진다냥' : `${n}×${n} 퍼즐이다냥. 콕콕!`);
     if (!s) for (let i = 0; i < n; i++) { crossIfDone('r', i, true); crossIfDone('c', i, true); }
     for (let i = 0; i < n * n; i++) paint(i);
     for (let i = 0; i < n; i++) { markClues('r', i); markClues('c', i); }
@@ -906,7 +920,7 @@ svg{display:block}
   }
 
   // 맞춤 칸 크기: 판 전체가 한 화면에 들어오는 크기. 큰 판(20×20 이상)을 다 풀면 숫자 띠를 접고 그림만 크게 보여요.
-  // 큰 판은 숫자 띠까지 넣으면 칸이 8px도 안 될 때(30×30·55×55 등) 숫자를 읽을 수 없으니, 숫자 띠를 접은 '전체 그림(미니맵)'으로 보여요.
+  // 30×30까지는 칸이 작아도 숫자 띠까지 넣어 맞춰요(확대 없이 바로 칠하기). 그보다 큰 판만 '전체 그림'으로 보여요.
   function fitSize(noClue) {
     const n = G.n, { rows, cols } = G.clues, bare = noClue || (G.won && n >= 20);
     const maxR = bare ? 0 : Math.max(1, ...rows.map((c) => c.length)), maxC = bare ? 0 : Math.max(1, ...cols.map((c) => c.length));
@@ -914,23 +928,27 @@ svg{display:block}
     const st = $('stage'), sw = st.clientWidth, sh = st.clientHeight;
     const W = (sw || Math.min(window.innerWidth, 480) - 28) - 30, H = Math.max(200, (sh || window.innerHeight - 320) - 30);
     let cell = Math.min(48, Math.floor((W - 14) / (n + maxR * 0.72)));
-    let fs = 0, clueW = 0, clueH = 0;
+    let fs = 0, clueW = 0, clueH = 0, hLim = false;
     for (let k = 0; k < 4; k++) {
       fs = Math.max(10, Math.min(19, Math.round(cell * 0.56)));
+      // 칸이 아주 작으면(30×30을 작은 폰에서 볼 때) 숫자가 윗줄·옆줄과 겹치지 않게 칸에 맞춰 8px까지 줄여요.
+      if (cell * 1.15 < fs) fs = Math.max(8, Math.floor(cell * 1.15));
       // 가로 숫자 띠 폭: 줄마다 실제 숫자 자릿수로 재요(두 자리 수를 모든 숫자에 가정하면 칸이 괜히 작아져요).
       clueW = bare ? 0 : Math.max(...rows.map((c) => { const a = c.length ? c : [0]; return a.reduce((t, v) => t + String(v).length * fs * 0.62, 0) + (a.length - 1) * fs * 0.42; })) + 16;
       clueH = bare ? 0 : maxC * (fs * 1.12 + 1) + 12;
-      const fit = Math.max(1, Math.min(Math.floor((W - clueW - 4) / n), Math.floor((H - clueH - 4) / n)));
+      const fw = Math.floor((W - clueW - 4) / n), fh = Math.floor((H - clueH - 4) / n), fit = Math.max(1, Math.min(fw, fh));
+      hLim = fh < fw;
       if (fit >= cell) break;
       cell = fit;
     }
-    // 숫자 띠를 넣으면 칸이 12px도 안 되는 판(작은 폰의 15·20칸, 30·55칸)은 숫자가 겹쳐 읽을 수 없으니 숫자 띠를 접은 전체 그림으로 보여요.
-    if (!bare && n >= 15 && cell < 12) return { ...fitSize(true), overview: true };
-    return { cell, fs, W, H, overview: false };
+    // 30×30까지는 칸이 작아도 확대 없이 바로 칠할 수 있게 숫자 띠까지 맞춰 보여요. 그보다 큰 판(지금은 쉬는 55×55)만 줄인 전체 그림으로 보여요.
+    if (!bare && n > 30 && cell < 12) return { ...fitSize(true), overview: true };
+    return { cell, fs, W, H, hLim, overview: false };
   }
   const ZC = () => (window.innerWidth < 360 ? 27 : 30);   // 확대 버튼으로 켤 때 칸 크기
   function buildBoard() {
     const n = G.n, { rows, cols } = G.clues;
+    $('game').classList.remove('tight');
     const board = $('board');
     board.style.setProperty('--n', n);
     const spans = (c) => (c.length ? c : [0]).map((v) => `<span${v > 9 ? ' data-w' : ''}>${v}</span>`).join('');   // 두 자리 수는 표시(세로 숫자 띠에서 좁게 써요)
@@ -954,7 +972,10 @@ svg{display:block}
   // 칸 크기만 바꿔요(칸을 다시 만들지 않아서 55×55도 가볍게 확대·축소돼요). G.zc: 확대 칸 크기, 0이면 맞춤.
   function zoomed() { return !!(G && G.canZoom && G.zc > 0 && !G.won); }
   function applySize() {
-    const board = $('board'), wrap = board.parentElement, st = $('stage'), f = fitSize();
+    const board = $('board'), wrap = board.parentElement, st = $('stage'), gm = $('game');
+    let f = fitSize();
+    // 20칸 넘는 판이 세로 자리 때문에 작아지는 폰(아이폰 SE 등)에서는 말풍선·버튼을 줄여 판 자리를 넓혀요(한 판 안에서는 다시 넓히지 않아요).
+    if (G.n >= 20 && f.hLim && !G.won && !gm.classList.contains('tight')) { gm.classList.add('tight'); f = fitSize(); }
     G.fit = f.cell;
     // 15칸 넘는 판(20·30·55)은 늘, 그 밖에는 손가락으로 누르기 힘들 만큼 칸이 작을 때(24px 미만) 확대할 수 있어요. 12px도 안 되면 처음부터 확대해서 열어요.
     G.canZoom = G.n > 15 || f.cell < 24;
@@ -964,7 +985,7 @@ svg{display:block}
     // 숫자 띠를 넣고 맞추면 숫자를 읽을 수 없는 큰 판은, 확대했을 때와 똑같이 그린 판을 통째로 줄여(축소 그림) 퍼즐 전체를 보여 줘요.
     let cell = on ? Math.max(G.zc, f.cell + 2) : G.overview ? ZC() : f.cell, k = 1;
     const fs = on || G.overview ? Math.max(10, Math.min(15, Math.round(cell * 0.47))) : f.fs;
-    board.className = 'board' + (G.won ? ' won' : '') + (G.won && G.n >= 20 ? ' bare' : '');
+    board.className = 'board' + (G.won ? ' won' : '') + (G.won && G.n >= 20 ? ' bare' : '') + (!on && !G.overview && f.cell < 12 ? ' tiny' : '');
     board.style.setProperty('--cell', cell + 'px');
     board.style.setProperty('--fs', fs + 'px');
     board.style.transform = '';
@@ -1498,8 +1519,22 @@ svg{display:block}
   // 아이폰 사파리는 버튼이 아닌 곳(빈 풀밭, 시트 바깥 어두운 배경)을 손가락으로 눌러도 click 을 만들지 않아요.
   // 화면 뿌리마다 빈 click 리스너를 달아 두면 그 안 어디를 눌러도 click 이 생겨 아래 document 처리로 올라와요.
   ['onb', 'map', 'gal', 'game', 'overlay'].forEach((id) => $(id).addEventListener('click', () => {}));
-  // 아이폰 사파리는 viewport 의 user-scalable=no 를 무시해서, 두 손가락 확대는 gesture 이벤트로 따로 막아요.
+  // 아이폰 사파리는 viewport 의 user-scalable=no 를 무시해요. 지도·목록 같은 기본 화면에서 화면 확대·끌어 옮기기·복사가 되지 않게 따로 막아요.
+  // (판의 두 손가락 확대는 게임이 직접 처리해서 그대로 돼요.)
   ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+  ['contextmenu', 'selectstart', 'dragstart'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault()));
+  // 두 손가락으로 화면 확대: 판 밖에서는 두 번째 손가락이 닿은 움직임을 막아요.
+  document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 && !e.target.closest('#stage')) e.preventDefault(); }, { passive: false });
+  // 두 번 톡 눌러 확대: 0.3초 안에 같은 자리를 다시 톡 누르면 그 두 번째 누름의 확대를 막아요(판은 따로 처리).
+  let tapEnd = 0, tapX = 0, tapY = 0, tapStart = null;
+  document.addEventListener('touchstart', (e) => { tapStart = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now() } : null; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const t = tapStart, c = e.changedTouches[0]; tapStart = null;
+    if (!t || !c || e.touches.length || Math.hypot(c.clientX - t.x, c.clientY - t.y) > 10 || performance.now() - t.t > 300) return;
+    const now = performance.now(), again = now - tapEnd < 300 && Math.hypot(c.clientX - tapX, c.clientY - tapY) < 40;
+    tapEnd = again ? 0 : now; tapX = c.clientX; tapY = c.clientY;
+    if (again && e.cancelable && !e.target.closest('#stage')) { e.preventDefault(); const bt = e.target.closest('button'); if (bt && !bt.disabled) bt.click(); }   // 버튼의 두 번째 누름은 그대로 눌러 줘요
+  }, { passive: false });
   document.addEventListener('click', (e) => {
     const tg = e.target;
     if (tg.closest('#grid') || tg.closest('.controls') || tg.closest('#back')) return;
@@ -1577,6 +1612,8 @@ svg{display:block}
   window.addEventListener('pagehide', persist);
 
   // 처음 온 사람은 난이도부터 골라요. 이미 풀던 기록이 있으면 쉬움 구간으로 두고 지도에서 바꿀 수 있어요.
+  // 쉬는 구간(55×55)에 있던 사람은 열린 마지막 구간으로, 쉬는 구간의 이어 풀기 기록은 숨겨 둬요(지우지는 않아요).
+  if (store.level && !packOf(store.level)) { store.level = PACKS[PACKS.length - 1].id; save(); }
   if (!store.level && (Object.keys(store.done).length || Object.keys(store.cur).length)) { store.level = 'easy'; save(); }
   if (store.level) renderMap(); else renderOnb();
 })();
