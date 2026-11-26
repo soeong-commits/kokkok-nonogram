@@ -19,7 +19,7 @@
   --pink-s:#C42A5C; --red-s:#B83220; --grass-s:#6C8A12; --sky-s:#5AAFC2; --clue-s:#E2BC85;
   --tx:#5A3214; --sub:#9A6A3C; --or:#FF9E3B; --or-d:#E2741F; --green:#6CC63A; --green-d:#4A9E23;
   --pink:#FF5184; --red:#FF5943; --sky:#47D1DE; --yel:#FFD23A;
-  --cellbg:#FFF9E3; --gl:#FFFFFF; --gb:#FFFFFF; --x:#D9BE95; --clue:#FFEBC9; --clue-hl:#FFD27A; --coral:#FF5A5F;
+  --cellbg:#FBF5E4; --gl:#FFFFFF; --gb:#FFFFFF; --x:#D9BE95; --clue:#FFEBC9; --clue-hl:#FFD27A; --coral:#FF5A5F;
   --kr:"Jua",-apple-system,"Apple SD Gothic Neo",sans-serif;
   --num:"Nunito","Jua",-apple-system,sans-serif;
 }
@@ -886,8 +886,8 @@ svg{display:block}
   function applySize() {
     const board = $('board'), wrap = board.parentElement, st = $('stage'), f = fitSize();
     G.fit = f.cell;
-    // 손가락으로 누르기 힘들 만큼 칸이 작으면(24px 미만) 확대할 수 있어요. 12px도 안 되면 처음부터 확대해서 열어요.
-    G.canZoom = f.cell < 24;
+    // 15칸 넘는 판(20·30·55)은 늘, 그 밖에는 손가락으로 누르기 힘들 만큼 칸이 작을 때(24px 미만) 확대할 수 있어요. 12px도 안 되면 처음부터 확대해서 열어요.
+    G.canZoom = G.n > 15 || f.cell < 24;
     if (G.zc === undefined) G.zc = G.canZoom ? (store.zc || (f.cell < 12 ? ZC() : 0)) : 0;
     const on = zoomed();
     let cell = on ? Math.max(G.zc, f.cell + 2) : f.cell;
@@ -1021,7 +1021,7 @@ svg{display:block}
       say(G.lives === 1 ? '조심, 하트가 하나 남았다냥!' : mode === 'fill' ? '앗, 거긴 빈칸이다냥!' : '앗, 거긴 채우는 칸이다냥!', 'oops');
     } else if (lineDone) say('한 줄 완성! 잘한다냥', 'happy');
     if (solved()) win();
-    else if (G.lives <= 0) { G.over = true; setTimeout(gameOver, 550); }
+    else if (G.lives <= 0) { G.over = true; overT = setTimeout(gameOver, 550); }
     return res;
   }
 
@@ -1081,7 +1081,20 @@ svg{display:block}
   // 큰 판에서는 손가락 첫 탭을 0.11초 기다렸다 칠해요. 그사이 두 번째 손가락이 닿으면 칠하지 않고
   // 판 옮기기(확대 중)·벌려서 확대·오므려서 전체 보기로 받아요. 마우스와 작은 판은 바로 칠해요.
   const pts = new Map();
-  let pend = null, pan = null, lastPt = null, raf = 0;
+  let pend = null, pan = null, lastPt = null, raf = 0, overT = 0;
+  // 두 손가락을 동시에 대지 못해도 괜찮게: 첫 손가락이 닿은 뒤 0.35초 안에 두 번째 손가락이 오면
+  // 첫 손가락이 칠한 칸·깎인 하트·실수 수를 통째로 되돌리고 확대·이동으로 받아요.
+  let touchSnap = null;
+  function undoTouch() {
+    const t = touchSnap; touchSnap = null;
+    if (!t || !G || G.won || performance.now() - t.at > 350) return;
+    if (t.cells.every((v, i) => v === G.cells[i])) return;
+    clearTimeout(overT);
+    G.cells = t.cells; G.lives = t.lives; G.miss = t.miss; G.over = false;
+    for (let i = 0; i < G.n * G.n; i++) paint(i);
+    for (let i = 0; i < G.n; i++) { markClues('r', i); markClues('c', i); }
+    renderStatus(); persist();
+  }
   const wrapEl = () => $('board').parentElement;
   function begin(pos) {
     drag = { start: pos, last: pos, axis: null, alive: true };
@@ -1156,12 +1169,14 @@ svg{display:block}
       pan1 = null;
       if (pend) { clearTimeout(pend.t); pend = null; highlight(null); }
       if (drag) { drag = null; highlight(null); }
+      undoTouch();
       if (pts.size === 2) startPan();
       return;
     }
     if (G.overview) { if (grid.contains(e.target)) { const at = { x: e.clientX, y: e.clientY }; setCell(Math.max(store.zc || 0, ZC()), gridFrac(at), at); } return; }
     const pos = grid.contains(e.target) ? cellAt(e) : null;
     if (!pos) { if (zoomed()) pan1 = { x: e.clientX, y: e.clientY, sl: boardWrap.scrollLeft, st: boardWrap.scrollTop }; return; }
+    touchSnap = e.pointerType === 'touch' && G.canZoom ? { at: performance.now(), cells: G.cells.slice(), lives: G.lives, miss: G.miss } : null;
     if (e.pointerType === 'touch' && G.canZoom) { pend = { pos, id: e.pointerId, x: e.clientX, y: e.clientY, t: setTimeout(commit, 110) }; highlight(pos); return; }
     begin(pos);
   });
